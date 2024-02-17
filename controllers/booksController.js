@@ -3,13 +3,15 @@ const parentDir = path.resolve(__dirname, '..');
 const booksModelPath = path.join(parentDir, 'models', 'BooksModel');
 const Book = require(booksModelPath);
 const asyncWrapper = require("./../lib/asyncWrapper");
+const CustomError = require("./../errors/customError")
 
-const addBook = async (req, res) => {
+
+const addBook = async (req, res, next) => {
   const newBook = new Book(req.body)
   const [err, book] = await asyncWrapper(newBook.save())
 
   if (err) {
-    return res.status(400).send(err.message)
+    return next(new CustomError("Error adding the book!", 500))
   }
 
   res.status(201).json({
@@ -18,6 +20,7 @@ const addBook = async (req, res) => {
       book,
     },
   });
+
 };
 
 const editBook = async (req, res) => {
@@ -29,8 +32,9 @@ const editBook = async (req, res) => {
   );
 
   if (err) {
-    return res.status(400).send(err.message)
+    return next(new CustomError("Error updating the book!", 500))
   }
+
   res.status(200).json({
     status: "success",
     data: {
@@ -43,12 +47,12 @@ const deleteBook = async (req, res) => {
   const [err] = await asyncWrapper(Book.findByIdAndDelete(req.params.id))
 
   if (err) {
-    return res.status(500).send(err.message);
+    return next(new CustomError("Error deleting the book!", 500))
   }
   res.sendStatus(204);
 };
 
-// apply pagination
+// applying pagination
 const getBooks = async (req, res) => {
   const page = req.query.page * 1 || 1
   const limit = req.query.limit * 1 || 20
@@ -57,7 +61,7 @@ const getBooks = async (req, res) => {
 
   if(req.query.page){
     const booksCount = await Book.countDocuments()
-    if(skip >= booksCount) return res.status(500).send("saad :(")
+    if(skip >= booksCount) return next(new CustomError("No more books to view!", 404))
   }
 
   const [err, books] = await asyncWrapper(
@@ -67,7 +71,7 @@ const getBooks = async (req, res) => {
   )
 
   if (err) {
-    return res.status(500).send(err.message)
+    return next(new CustomError("Error getting the books!", 500))
   }
   res.status(200).json({
     status: "success",
@@ -82,11 +86,11 @@ const getBookById = async (req, res, next) => {
 
   const [err, book] = await booksModel
     .findById(id)
-    .populate({ path: "category", select: "omnia-category-name" })
-    .populate({ path: "auhtor", select: "omnia-author-name" })
+    .populate({ path: "category", select: "---" })
+    .populate({ path: "auhtor", select: "----" })
     .exec();
   if(err){
-    return res.status(500).send(err.message)
+    return next(new CustomError("Error getting the book!", 500))
   }
   res.status(200).json({
     status: "success",
@@ -96,13 +100,10 @@ const getBookById = async (req, res, next) => {
   });
 };
 
-
 // find books for specific user
 // add books for specific user
 // edit books for specific user
 // delete books for specifis user
-
-
 
 module.exports = {
   addBook,
