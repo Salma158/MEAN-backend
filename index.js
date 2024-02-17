@@ -22,6 +22,14 @@ app.use(express.json());
 
 app.use("/books", booksRouter);
 
+app.use((error, req, res) =>
+  res.status(error.status).json({ error: error.message })
+);
+
+app.use((err, req, res) => {
+  res.status(err.status).json({ error: err.message });
+});
+
 app.listen(PORT, () => {
   console.log(`server is running on port: ${PORT}`);
 });
