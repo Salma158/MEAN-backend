@@ -3,7 +3,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 dotenv.config({ path: "./config.env" });
-
 const app = express();
 const PORT = process.env.PORT;
 const DB = process.env.DATABASE;
