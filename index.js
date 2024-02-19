@@ -1,7 +1,6 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const mongoose = require("mongoose");
-const booksRouter = require("./routes/booksRouter");
 
 dotenv.config({ path: "./config.env" });
 
@@ -19,8 +18,6 @@ mongoose
   });
 
 app.use(express.json());
-
-app.use("/books", booksRouter);
 
 app.listen(PORT, () => {
   console.log(`server is running on port: ${PORT}`);
