@@ -2,8 +2,10 @@ const dotenv = require("dotenv");
 const express = require("express");
 const mongoose = require("mongoose");
 const booksRouter = require("./routes/booksRouter");
+const userRouter = require('./routes/users');
 
-dotenv.config({ path: "./config.env" });
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT;
@@ -21,11 +23,11 @@ mongoose
 app.use(express.json());
 
 app.use("/books", booksRouter);
+app.use("/user", userRouter);
 
 
-app.use((err, req, res, next) => {
-  res.status(err.status).json({ error: err.message });
-});
+
+app.use((error, req, res, next) => res.status(error.status).json({ error: error.message }));
 
 app.listen(PORT, () => {
   console.log(`server is running on port: ${PORT}`);
