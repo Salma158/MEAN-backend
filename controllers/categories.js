@@ -46,7 +46,7 @@ const deleteCategory = async (req, res, next) => {
 
 const updateCategory = async (req, res, next) => {
   const { categoryName } = req.body.categoryName;
-  const categoryToUpdate = await asyncWrapper(Categories.findById(req.params.id));
+  const [err, categoryToUpdate] = await asyncWrapper(Categories.findById(req.params.id));
   if (!categoryToUpdate) {
     return res.status(404).json({ message: 'Category ID Not Found' });
   }
