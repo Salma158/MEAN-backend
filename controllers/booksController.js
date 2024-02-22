@@ -3,7 +3,7 @@ const parentDir = path.resolve(__dirname, "..");
 const booksModelPath = path.join(parentDir, "models", "BooksModel");
 const Book = require(booksModelPath);
 const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
-const UserBook = requie(userbooksModelPath)
+const UserBook = require(userbooksModelPath)
 const asyncWrapper = require("../lib/asyncWrapper");
 const CustomError = require("./../lib/customError");
 
