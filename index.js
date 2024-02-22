@@ -1,7 +1,9 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const mongoose = require("mongoose");
-
+const booksRouter = require("./routes/booksRouter");
+const userBooksRouter = require("./routes/userBooksRouter")
+const path = require("path");
 
 dotenv.config({ path: "./config.env" });
 
@@ -19,6 +21,10 @@ mongoose
   });
 
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use('/books', booksRouter)
+app.use('/userBooks', userBooksRouter)
 
 app.use((err, req, res, next) => {
   res.status(err.status).json({ error: err.message });
