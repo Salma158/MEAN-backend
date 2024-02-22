@@ -23,10 +23,6 @@ const usersSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true
-
-    },
-    dob: {
-        type: Date,
     },
     password: {
         type: String,
@@ -39,6 +35,9 @@ const usersSchema = new mongoose.Schema({
         enum: ['admin', 'user'],
         default: 'user'
     },
+    photo: {
+        type: String
+    }
 }, {
     timestamps: true,
 },
