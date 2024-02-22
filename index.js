@@ -1,11 +1,7 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const mongoose = require("mongoose");
-const booksRouter = require("./routes/booksRouter");
-const userRouter = require('./routes/users');
-const auth = require('./middlewares/auth')
-
-const userBooksRouter = require("./routes/userBooksRouter")
+const routes = require('./routes');
 const path = require("path");
 
 dotenv.config();
@@ -25,11 +21,7 @@ mongoose
   });
 
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-app.use("/books", booksRouter);
-app.use("/user", userRouter);
-app.use('/userbooks', auth.authorization, userBooksRouter);
+app.use(routes);
 
 
 
