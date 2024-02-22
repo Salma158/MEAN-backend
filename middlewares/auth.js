@@ -1,6 +1,6 @@
 const jsonWebToken = require('jsonwebtoken');
 const User = require('../models/users')
-const CustomError = require('../errors/customError');
+const CustomError = require('../lib/customError');
 const userController = require('../controllers/users');
 const asyncWrapper = require('../lib/asyncWrapper');
 function authorization(req, res, next) {

@@ -3,7 +3,7 @@ const parentDir = path.resolve(__dirname, "..");
 const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
 const UserBook = require(userbooksModelPath);
 const asyncWrapper = require("./../lib/asyncWrapper");
-const CustomError = require("./../lib/customError");
+const CustomError = require("../lib/customError");
 
 // ---------get user books by user id according to the status------------
 const getUserBooksByStatus = async (req, res, next) => {

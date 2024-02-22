@@ -5,7 +5,7 @@ const Book = require(booksModelPath);
 const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
 const UserBook = require(userbooksModelPath)
 const asyncWrapper = require("../lib/asyncWrapper");
-const CustomError = require("./../lib/customError");
+const CustomError = require("../lib/customError");
 
 
 //------------ adding new book ---------------
