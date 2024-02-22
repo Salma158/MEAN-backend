@@ -2,11 +2,19 @@ const User = require('../models/users');
 const asyncWrapper = require('../lib/asyncWrapper');
 const CustomError = require('../errors/customError');
 const jsonWebToken = require('jsonwebtoken');
-const signUp = async (req, res, next) => {
+const addOne = async (req, res, next) => {
     const newUser = req.body;
-    const [err, user] = await asyncWrapper(User.create(newUser));
+    const photoFullPath = `${req.protocol}://${req.get('host')}/profile/${req.file.filename}`;
+    const [err, user] = await asyncWrapper(User.create({
+        userName: newUser.userName,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        password: newUser.password,
+        photo: photoFullPath
+    }));
     if (err) {
-        return next(new CustomError('Username already exists'), 400);
+        return next(new CustomError(err.message, 400));
     }
     res.status(201).json({ message: 'User created successfully', user });
 
@@ -55,7 +63,7 @@ const updateRole = async (req, res, next) => {
 }
 
 module.exports = {
-    signUp,
+    addOne,
     logIn,
     findOne,
     getAll,
