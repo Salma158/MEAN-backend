@@ -1,7 +1,7 @@
 /* eslint-disable linebreak-style */
 const router = require('express').Router();
 const { categoriesController } = require('../controllers');
-const auth = require('./middlewares/auth');
+const auth = require('../middlewares/auth');
 router.get('/', categoriesController.getAllCategories);
 
 router.post('/', auth.authorization, auth.restrictTo('admin'), categoriesController.createCategory);
