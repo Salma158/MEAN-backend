@@ -5,7 +5,7 @@ const booksRouter = require("./routes/booksRouter");
 const userBooksRouter = require("./routes/userBooksRouter")
 const path = require("path");
 
-dotenv.config({ path: "./config.env" });
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT;
