@@ -1,6 +1,6 @@
 const User = require('../models/users');
 const asyncWrapper = require('../lib/asyncWrapper');
-const CustomError = require('../errors/customError');
+const CustomError = require('../lib/customError');
 const jsonWebToken = require('jsonwebtoken');
 const addOne = async (req, res, next) => {
     const newUser = req.body;

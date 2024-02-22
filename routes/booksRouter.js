@@ -2,9 +2,9 @@ const express = require("express")
 const booksRouter = express.Router()
 const booksController = require('../controllers/booksController')
 const upload = require('../middlewares/multerConfig')
-
+const auth = require('../middlewares/auth')
 booksRouter.route('/')
-    .post(upload.single("image"), booksController.addBook)
+    .post(auth.authorization, auth.restrictTo('admin'), upload.single("image"), booksController.addBook)
     .get(booksController.getBooks)
 
 booksRouter.route('/popularBooks')
@@ -12,12 +12,12 @@ booksRouter.route('/popularBooks')
 
 booksRouter.route('/searchBook')
     .get(booksController.searchBook)
-    
+
 
 booksRouter.route("/:id")
     .get(booksController.getBookById)
-    .patch(booksController.editBook)
-    .delete(booksController.deleteBook)
+    .patch(auth.authorization, auth.restrictTo('admin'), booksController.editBook)
+    .delete(auth.authorization, auth.restrictTo('admin'), booksController.deleteBook)
 
 
 

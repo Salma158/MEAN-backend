@@ -3,7 +3,7 @@ const path = require('path');
 
 const storage = multer.diskStorage({
     destination: (req, res, cb) => {
-        cb(null, 'profile/')
+        cb(null, 'images/profile/')
     },
     filename: function (req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); // Generate unique filename
@@ -33,7 +33,7 @@ const multerMiddleware = (req, res, next) => {
         if (err) {
             return res.status(400).json({ message: 'File upload failed', error: err });
         }
-        next(); // Move on to the next middleware or route handler
+        next();
     });
 };
 

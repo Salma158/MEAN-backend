@@ -9,12 +9,13 @@ const CustomError = require("./../lib/customError");
 
 //------------ adding new book ---------------
 const addBook = async (req, res, next) => {
-  const {author, category, name, description} = req.body
+  const { author, category, name, description } = req.body
+  const photoFullPath = `${req.protocol}://${req.get('host')}images/books/${req.file.filename}`;
   const newBook = new Book({
     author,
     category,
     name,
-    image : req.file.filename,
+    image: photoFullPath,
     description
   });
   const [err, book] = await asyncWrapper(newBook.save());
@@ -91,9 +92,9 @@ const getBookById = async (req, res, next) => {
   const id = req.params.id;
 
   const [err, book] = await asyncWrapper(Book.findById(id))
-     .populate({ path: "category", select: "categoryName" })
-     .populate({ path: "auhtor", select: "firstName lastName" })
-     .exec();
+    .populate({ path: "category", select: "categoryName" })
+    .populate({ path: "auhtor", select: "firstName lastName" })
+    .exec();
   if (err) {
     return next(new CustomError("Error getting the book!", 500));
   }
