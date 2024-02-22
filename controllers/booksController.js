@@ -1,17 +1,25 @@
-const path = require('path');
-const parentDir = path.resolve(__dirname, '..');
-const booksModelPath = path.join(parentDir, 'models', 'BooksModel');
+const path = require("path");
+const parentDir = path.resolve(__dirname, "..");
+const booksModelPath = path.join(parentDir, "models", "BooksModel");
 const Book = require(booksModelPath);
-const asyncWrapper = require("./../lib/asyncWrapper");
-const CustomError = require("./../errors/customError")
+const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
+const UserBook = requie(userbooksModelPath)
+const asyncWrapper = require("../lib/asyncWrapper");
+const CustomError = require("./../lib/customError");
 
-
+//------------ adding new book ---------------
 const addBook = async (req, res, next) => {
-  const newBook = new Book(req.body)
-  const [err, book] = await asyncWrapper(newBook.save())
-
+  const {author, category, name, description} = req.body
+  const newBook = new Book({
+    author,
+    category,
+    name,
+    image : req.file.filename,
+    description
+  });
+  const [err, book] = await asyncWrapper(newBook.save());
   if (err) {
-    return next(new CustomError("Error adding the book!", 500))
+    return next(new CustomError("Error adding the book!", 500));
   }
 
   res.status(201).json({
@@ -20,9 +28,9 @@ const addBook = async (req, res, next) => {
       book,
     },
   });
-
 };
 
+// -------------- editing a book -------------
 const editBook = async (req, res) => {
   req.body.updatedAt = new Date();
   const [err, updatedBook] = await asyncWrapper(
@@ -32,7 +40,7 @@ const editBook = async (req, res) => {
   );
 
   if (err) {
-    return next(new CustomError("Error updating the book!", 500))
+    return next(new CustomError("Error updating the book!", 500));
   }
 
   res.status(200).json({
@@ -43,35 +51,32 @@ const editBook = async (req, res) => {
   });
 };
 
+// -------------- delete a book ----------------
 const deleteBook = async (req, res) => {
-  const [err] = await asyncWrapper(Book.findByIdAndDelete(req.params.id))
+  const [err] = await asyncWrapper(Book.findByIdAndDelete(req.params.id));
 
   if (err) {
-    return next(new CustomError("Error deleting the book!", 500))
+    return next(new CustomError("Error deleting the book!", 500));
   }
   res.sendStatus(204);
 };
 
-// applying pagination
+//------------ get all books --------------
 const getBooks = async (req, res) => {
-  const page = req.query.page * 1 || 1
-  const limit = req.query.limit * 1 || 20
-  const skip = (page - 1) * limit
-  const category = req.query.category;
+  const page = req.query.page * 1 || 1;
+  const limit = req.query.limit * 1 || 20;
+  const skip = (page - 1) * limit;
 
-  if(req.query.page){
-    const booksCount = await Book.countDocuments()
-    if(skip >= booksCount) return next(new CustomError("No more books to view!", 404))
+  if (req.query.page) {
+    const booksCount = await Book.countDocuments();
+    if (skip >= booksCount)
+      return next(new CustomError("No more books to view!", 404));
   }
 
-  const [err, books] = await asyncWrapper(
-    category
-      ? Book.find({ category: category }).skip(skip).limit(limit)
-      : Book.find().skip(skip).limit(limit)
-  )
+  const [err, books] = await asyncWrapper(Book.find().skip(skip).limit(limit));
 
   if (err) {
-    return next(new CustomError("Error getting the books!", 500))
+    return next(new CustomError("Error getting the books!", 500));
   }
   res.status(200).json({
     status: "success",
@@ -81,16 +86,16 @@ const getBooks = async (req, res) => {
   });
 };
 
+// --------------- get book by id -----------------
 const getBookById = async (req, res, next) => {
-  const id = req.params.id * 1;
+  const id = req.params.id;
 
-  const [err, book] = await booksModel
-    .findById(id)
-    .populate({ path: "category", select: "---" })
-    .populate({ path: "auhtor", select: "----" })
-    .exec();
-  if(err){
-    return next(new CustomError("Error getting the book!", 500))
+  const [err, book] = await asyncWrapper(Book.findById(id))
+     .populate({ path: "category", select: "categoryName" })
+     .populate({ path: "auhtor", select: "firstName lastName" })
+     .exec();
+  if (err) {
+    return next(new CustomError("Error getting the book!", 500));
   }
   res.status(200).json({
     status: "success",
@@ -100,15 +105,67 @@ const getBookById = async (req, res, next) => {
   });
 };
 
-// find books for specific user
-// add books for specific user
-// edit books for specific user
-// delete books for specifis user
+const getPopularBooks = async (req, res, next) => {
+  const popularBooks = asyncWrapper(await UserBook.aggregate([
+    {
+      $match: {
+        status: "already read",
+      },
+    },
+    {
+      $group: {
+        _id: "$book",
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $sort: {
+        count: -1,
+      },
+    },
+    {
+      $limit: 20,
+    },
+  ]));
+
+  const bookIds = popularBooks.map((item) => item._id);
+  const popularBooksDetails = await Book.find({ _id: { $in: bookIds } });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      popularBooks: popularBooksDetails,
+    },
+  });
+};
+
+const searchBook = async (req, res, next) => {
+  const { searchedBook } = req.query;
+
+  const regex = new RegExp(searchedBook, 'i');
+
+  const [err, books] = await asyncWrapper(
+    Book.find({ name: { $regex: regex } })
+  );
+
+  if (err) {
+    return next(new CustomError("Error searching for the book!", 500));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      books,
+    },
+  });
+};
 
 module.exports = {
   addBook,
   editBook,
   deleteBook,
   getBooks,
-  getBookById
+  getBookById,
+  searchBook,
+  getPopularBooks,
 };
