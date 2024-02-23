@@ -1,6 +1,7 @@
 /* eslint-disable linebreak-style */
 const Categories = require('../models/categories');
-const Books = require('../models/BooksModel');
+const Book = require('../models/BooksModel');
+const mongoose = require('mongoose');
 const asyncWrapper = require('../lib/asyncWrapper');
 
 const validateCategoryName = (categoryName) => {
@@ -45,7 +46,7 @@ const deleteCategory = async (req, res, next) => {
 };
 
 const updateCategory = async (req, res, next) => {
-  const { categoryName } = req.body.categoryName;
+  const { categoryName } = req.body;
   const [err, categoryToUpdate] = await asyncWrapper(Categories.findById(req.params.id));
   if (!categoryToUpdate) {
     return res.status(404).json({ message: 'Category ID Not Found' });
@@ -68,57 +69,71 @@ const updateCategory = async (req, res, next) => {
   return next(updateError);
 };
 
-// const page = parseInt(req.query.page, 10) || 0;
-// const booksPerPage = 4;
-const getCategoryBooks = async (req, res, next) => {
-  const [err, books] = await asyncWrapper(Books.find({ category: req.params.id }).populate({
-    path: 'Author',
-    select: 'firstName',
-  }).exec());
 
+// getting books with the author of a specific category using pagination
+const getCategoryBooks = async (req, res, next) => {
+  const pageNumber = parseInt(req.query.pageNumber) || 0;
+  const limitSize = parseInt(req.query.limitSize) || 4;
+  const skip = pageNumber * limitSize;
+  const [err, books] = await asyncWrapper(Book.find({ category: req.params.id }).select('name -_id')
+  .populate({
+    path: 'author',
+    select: 'firstName lastName -_id'
+ })
+    .skip(skip)
+    .limit(limitSize)
+    .exec());
   if (err) {
     return next(err);
   }
-
-  return res.json({ data: books });
+  if (!books || books.length === 0) {
+    return res.status(404).json({ message: 'No books found for the specified category.' });
+  }
+  return res.status(200).json({ data: books });
 };
+
 
 const getPopularCategories = async (req, res, next) => {
-  try {
-    const popularCategories = await Books.aggregate([
-      {
-        $group: {
-          _id: '$category',
-          bookCount: { $sum: 1 }, // Count the number of books in each category
-        },
-      },
-      {
-        $lookup: {
-          from: 'categories',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'category',
-        },
-      },
-      {
-        $unwind: '$category',
-      },
-      {
-        $project: {
-          categoryName: '$category.categoryName',
-          bookCount: 1, // Include the bookCount field
-        },
-      },
-      {
-        $sort: { bookCount: -1 },
-      },
-    ]);
+      const [err, popularCategories] = await asyncWrapper(Book.aggregate([
+          {
+              $group: {
+                  _id: '$category',
+                  bookCount: { $sum: 1 },
+              },
+          },
+          {
+              $lookup: {
+                  from: 'categories',
+                  localField: '_id',
+                  foreignField: '_id',
+                  as: 'category',
+              },
+          },
+          {
+              $unwind: '$category',
+          },
+          {
+              $project: {
+                  categoryName: '$category.categoryName',
+                  bookCount: 1,
+              },
+          },
+          {
+              $sort: { bookCount: -1 },
+          },
+          {
+              $limit: 3,
+          },
+      ]));
 
-    res.json({ popularCategories });
-  } catch (error) {
-    next(error);
-  }
+      if (err) {
+          throw next(err);
+      }
+
+      res.json({ popularCategories });
+  
 };
+
 
 module.exports = {
   getAllCategories,

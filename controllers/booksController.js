@@ -10,12 +10,12 @@ const CustomError = require("../lib/customError");
 //------------ adding new book ---------------
 const addBook = async (req, res, next) => {
   const { author, category, name, description } = req.body
-  const photoFullPath = `${req.protocol}://${req.get('host')}images/books/${req.file.filename}`;
+  // const photoFullPath = `${req.protocol}://${req.get('host')}images/books/${req.file.filename}`;
   const newBook = new Book({
     author,
     category,
     name,
-    image: photoFullPath,
+    // image: photoFullPath,
     description
   });
   const [err, book] = await asyncWrapper(newBook.save());
