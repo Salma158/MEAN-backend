@@ -6,16 +6,16 @@ const CustomError = require('../lib/customError');
 
 // get author using pagination
 const getAllAuthors = async (req, res, next) => {
-  const page = parseInt(req.query.page, 10) || 0;
-  const limit = parseInt(req.query.limit, 10) || 20;
-  const skip = page * limit;
+  const pageNumber = parseInt(req.query.pageNumber, 10) || 0;
+  const limitSize = parseInt(req.query.limitSize, 10) || 4;
+  const skip = pageNumber * limitSize;
   const authorsCount = await Authors.countDocuments();
   if (skip >= authorsCount) {
     return next(new CustomError('No More Authors To Display', 404));
   }
   const [err, authors] = await asyncWrapper(Authors.find({}).select('firstName lastName -_id')
-    .skip((page) * limit)
-    .limit(limit)
+    .skip((pageNumber) * limitSize)
+    .limit(limitSize)
     .exec());
   if (authors.length === 0) {
     return res.status(404).json({ message: 'No data found' });
@@ -28,7 +28,10 @@ const getAllAuthors = async (req, res, next) => {
 
 const createAuthor = async (req, res) => {
   const author = req.body;
-  const newAuthor = await asyncWrapper(Authors.create(author));
+  const [err, newAuthor] = await asyncWrapper(Authors.create(author));
+  if (err) {
+    return next(err);
+  }
   return res.json(newAuthor);
 };
 
