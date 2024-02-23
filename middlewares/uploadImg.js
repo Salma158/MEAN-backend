@@ -6,7 +6,7 @@ const storage = multer.diskStorage({
         cb(null, 'images/profile/')
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); // Generate unique filename
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
 
 });
@@ -26,15 +26,8 @@ const upload = multer({
     fileFilter: function (req, file, cb) {
         checkType(file, cb);
     }
-}).single('photo');
+});
 
-const multerMiddleware = (req, res, next) => {
-    upload(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ message: 'File upload failed', error: err });
-        }
-        next();
-    });
-};
 
-module.exports = multerMiddleware;
+
+module.exports = upload;
