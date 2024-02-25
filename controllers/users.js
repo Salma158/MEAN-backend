@@ -2,8 +2,10 @@ const User = require('../models/users');
 const asyncWrapper = require('../lib/asyncWrapper');
 const CustomError = require('../lib/customError');
 const jsonWebToken = require('jsonwebtoken');
+const fs = require('fs')
 const addOne = async (req, res, next) => {
     const newUser = req.body;
+    //const photoFullPath = `${__dirname}images/profile/${req.file.filename}`;
     const photoFullPath = `${req.protocol}://${req.get('host')}/profile/${req.file.filename}`;
     const [err, user] = await asyncWrapper(User.create({
         userName: newUser.userName,
@@ -11,9 +13,11 @@ const addOne = async (req, res, next) => {
         lastName: newUser.lastName,
         email: newUser.email,
         password: newUser.password,
-        photo: photoFullPath
+        photo: photoFullPath,
+        role: newUser.role
     }));
     if (err) {
+        fs.unlinkSync(req.file.path);
         return next(new CustomError(err.message, 400));
     }
     res.status(201).json({ message: 'User created successfully', user });
