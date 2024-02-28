@@ -47,9 +47,6 @@ const editBook = async (req, res) => {
 
 
   if (err) {
-    if (err.name === "ValidationError") {
-      return handleValidationError(err, next);
-    }
     return next(new CustomError("Error updating the book!", 500));
   }
 
@@ -192,7 +189,6 @@ const calculateAvgRating = async (req, res, next) => {
   const [err, ratings] = await asyncWrapper(
     UserBook.find({ book: bookId, rating: { $exists: true } }).select("rating")
   );
-console.log(ratings)
   if (err) {
     throw new CustomError("Error calculating average rating!", 500);
   }

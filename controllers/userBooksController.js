@@ -4,6 +4,7 @@ const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
 const UserBook = require(userbooksModelPath);
 const asyncWrapper = require("./../lib/asyncWrapper");
 const CustomError = require("../lib/customError");
+const handleValidationError = require("../lib/customValidator")
 
 // ---------get user books by user id according to the status------------
 const getUserBooksByStatus = async (req, res, next) => {
@@ -53,11 +54,8 @@ const editUserBook = async (req, res, next) => {
   const [err, updatedUserBook] = await asyncWrapper(
     UserBook.findByIdAndUpdate(id, updates, { new: true })
   );
-  
+
   if (err) {
-    if (err.name === "ValidationError") {
-      return handleValidationError(err, next);
-    }
     return next(new CustomError("Error updating user book!", 500));
   }
 
