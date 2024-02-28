@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const categorySchema = new mongoose.Schema({
   categoryName: {
     type: String,
+    maxlength: 50,
     required: true,
     unique: true,
     validate: {

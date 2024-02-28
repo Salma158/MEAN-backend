@@ -14,6 +14,4 @@ router.patch('/:id', auth.authorization, auth.restrictTo('admin'), authorsContro
 
 router.get('/popular', authorsController.getPopularAuthors);
 
-router.get('/:id', authorsController.getAuthorDetails);
-
 module.exports = router;

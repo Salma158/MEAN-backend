@@ -3,15 +3,9 @@ const Authors = require('../models/authors');
 const asyncWrapper = require('../lib/asyncWrapper');
 const Book = require('../models/BooksModel');
 const CustomError = require('../lib/customError');
+const validateString = require('../lib/validateString');
 
-const validateString = (data) => {
-  if (!data || data.trim() === '') {
-    return false;
-  }
-  return true;
-};
-
-// get author using pagination
+// get authors using pagination
 const getAllAuthors = async (req, res, next) => {
   const pageNumber = parseInt(req.query.pageNumber, 10) || 0;
   const limitSize = parseInt(req.query.limitSize, 10) || 4;
@@ -29,18 +23,11 @@ const getAllAuthors = async (req, res, next) => {
   return res.json({ message: 'success', data: authors });
 };
 
+
 const createAuthor = async (req, res, next) => {
-  // if(! validateString(req.body.firstName)){
-  //   return res.status(400).json({ message: 'Invalid First Name' });
-  // }
-  // if(! validateString(req.body.lastName)){
-  //   return res.status(400).json({ message: 'Invalid Last Name' });
-  // }
-  // if(! validateString(req.body.dob)){
-  //   return res.status(400).json({ message: 'Invalid Date Of Birth' });
- // }
+  
   const authorData = req.body;
-  const photoFullPath = (`${req.protocol}://${req.get('host')}/authors/${req.file.filename}`);
+  const photoFullPath = (`${req.protocol}://${req.get('host')}/images/authors/${req.file.filename}`);
   const [err, newAuthor] = await asyncWrapper(Authors.create({
       firstName: authorData.firstName,
       lastName: authorData.lastName,
@@ -48,11 +35,19 @@ const createAuthor = async (req, res, next) => {
       photo: photoFullPath
     }
     ));
+    if(! validateString(req.body.firstName)){
+    return res.status(400).json({ message: 'Invalid First Name' });
+  }
+  if(! validateString(req.body.lastName)){
+    return res.status(400).json({ message: 'Invalid Last Name' });
+  }
+  if(! validateString(req.body.dob)){
+    return res.status(400).json({ message: 'Invalid Date Of Birth' });
+ }
   if (err) {
-    return next(new CustomError(err.message, 400));
+    return next(new CustomError(err.message, 404));
   }
   return res.status(201).json({ message: 'success', data: newAuthor });
-
 };
 
 const deleteAuthor = async (req, res, next) => {
@@ -97,14 +92,11 @@ const updateAuthor = async (req, res, next) => {
 };
 
 const getAuthorDetails = async (req, res, next) => {
-  // const [error, authorBooks] = await asyncWrapper(Book.find({ _id: req.params.AuthorId })
-  // .select('name -_id')
-  // );
-  // if (error) {
-  //   return next(error);
-  // }
-  // return res.json({ data: authorBooks });
-
+  const authorId = req.params.id;
+  const authorDetails = await Authors.findById(authorId, 'firstName lastName dob');
+  const books = await Book.find({ author: authorId }, 'name status');
+  // check displaying the status and add the avg reviews and total
+  return res.status(200).json({ author: authorDetails, books: books });
 };
 
 const getPopularAuthors = async (req, res, next) => {

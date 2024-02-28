@@ -4,13 +4,7 @@ const Book = require('../models/BooksModel');
 const mongoose = require('mongoose');
 const asyncWrapper = require('../lib/asyncWrapper');
 const CustomError = require('../lib/customError');
-
-const validateCategoryName = (categoryName) => {
-  if (!categoryName || categoryName.trim() === '') {
-    return false;
-  }
-  return true;
-};
+const validateString = require('../lib/validateString');
 
 const getAllCategories = async (req, res, next) => {
   const [err, categories] = await asyncWrapper(Categories.find({}).select('categoryName -_id'));
@@ -22,7 +16,7 @@ const getAllCategories = async (req, res, next) => {
 
 const createCategory = async (req, res, next) => {
   const category = req.body;
-  if (!validateCategoryName(category.categoryName)) {
+  if (!new validateString(category.categoryName)) {
     return res.status(400).json({ message: 'Invalid Category Name' });
   }
   const [err, newCategory] = await asyncWrapper(Categories.create(category));
@@ -50,21 +44,20 @@ const updateCategory = async (req, res, next) => {
     return res.status(404).json({ message: 'Category ID Not Found' });
   }
 
-  if (!validateCategoryName(categoryName)) {
+  if (!validateString(categoryName)) {
     return res.status(400).json({ error: 'Invalid Category Name' });
-  }
+}
 
   const [updateError, updatedCategory] = await asyncWrapper(Categories.findOneAndUpdate(
     { _id: req.params.id },
     { categoryName },
     { runValidators: true, new: true },
   ));
-
-  if (!updateError) {
-    return res.json(updatedCategory);
-  }
-
-  return next(updateError);
+    console.log(updatedCategory)
+   if (!updateError) {
+     return res.json(updatedCategory);
+   }
+   return next(updateError);
 };
 
 
