@@ -12,4 +12,8 @@ router.patch('/:id', auth.authorization, auth.restrictTo('admin'), authorsContro
 
 router.get('/:id', authorsController.getAllAuthorsBooks);
 
+router.patch('/:firstName/:lastName', auth.authorization, auth.restrictTo('admin'), authorsController.getAuthorIdByName);
+
+
+
 module.exports = router;

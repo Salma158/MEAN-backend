@@ -4,14 +4,14 @@ const CustomError = require('../lib/customError');
 const jsonWebToken = require('jsonwebtoken');
 const addOne = async (req, res, next) => {
     const newUser = req.body;
-    const photoFullPath = `${req.protocol}://${req.get('host')}/profile/${req.file.filename}`;
+   // const photoFullPath = `${req.protocol}://${req.get('host')}/profile/${req.file.filename}`;
     const [err, user] = await asyncWrapper(User.create({
         userName: newUser.userName,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         email: newUser.email,
         password: newUser.password,
-        photo: photoFullPath
+       // photo: photoFullPath
     }));
     if (err) {
         return next(new CustomError(err.message, 400));

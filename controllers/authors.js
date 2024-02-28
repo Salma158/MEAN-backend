@@ -70,6 +70,19 @@ const getAllAuthorsBooks = async (req, res, next) => {
   return res.json({ data: authorBooks });
 };
 
+const getAuthorIdByName = async (req, res, next) => {
+  const { firstName, lastName } = req.params;
+  const [err, author] = await asyncWrapper(Categories.findOne({ firstName, lastName }));
+  if (err) {
+    return next(err);
+  }
+  if (!author) {
+    throw new Error('Author not found');
+  }
+  return author._id;
+};
+
+
 // Popular Author
 
 module.exports = {
@@ -79,4 +92,5 @@ module.exports = {
   updateAuthor,
   // popularAuthor,
   getAllAuthorsBooks,
+  getAuthorIdByName
 };

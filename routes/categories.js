@@ -14,4 +14,6 @@ router.get('/:id', categoriesController.getCategoryBooks);
 
 router.patch('/:id', auth.authorization, auth.restrictTo('admin'), categoriesController.updateCategory);
 
+router.patch('/:categoryName', auth.authorization, auth.restrictTo('admin'), categoriesController.getCategoryIdByName);
+
 module.exports = router;

@@ -8,6 +8,8 @@ router.use('/categories', require('./categories'));
 router.use('/authors', require('./authors'));
 router.use("/books", booksRouter);
 router.use("/user", userRouter);
-router.use('/userbooks', auth.authorization, userBooksRouter);
+router.use('/userbooks', 
+//auth.authorization,
+userBooksRouter);
 
 module.exports = router;

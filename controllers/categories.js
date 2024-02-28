@@ -120,6 +120,18 @@ const getPopularCategories = async (req, res, next) => {
   }
 };
 
+const getCategoryIdByName = async (req, res, next) => {
+  const { categoryName } = req.params
+  const [err, category] = await asyncWrapper(Categories.findOne({ categoryName }));
+  if (err) {
+    return next(err)
+  }
+  if (!category) {
+    throw new Error('Category not found');
+  }
+  return category._id;
+};
+
 module.exports = {
   getAllCategories,
   getCategoryBooks,
@@ -127,4 +139,5 @@ module.exports = {
   deleteCategory,
   updateCategory,
   getPopularCategories,
+  getCategoryIdByName
 };

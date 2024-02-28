@@ -3,9 +3,6 @@ const booksRouter = express.Router()
 const booksController = require('../controllers/booksController')
 const upload = require('../middlewares/multerConfig')
 const auth = require('../middlewares/auth')
-booksRouter.route('/')
-    .post(auth.authorization, auth.restrictTo('admin'), upload.single("image"), booksController.addBook)
-    .get(booksController.getBooks)
 
 booksRouter.route('/popularBooks')
     .get(booksController.getPopularBooks)
@@ -13,6 +10,15 @@ booksRouter.route('/popularBooks')
 booksRouter.route('/searchBook')
     .get(booksController.searchBook)
 
+booksRouter.route('/avgRating/:bookId').get(booksController.calculateAvgRating)
+
+booksRouter.route('/')
+    .post(
+        
+        // auth.authorization, 
+        // auth.restrictTo('admin'), upload.single("image"),
+         booksController.addBook)
+    .get(booksController.getBooks)
 
 booksRouter.route("/:id")
     .get(booksController.getBookById)
