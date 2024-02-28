@@ -2,11 +2,11 @@
 const router = require('express').Router();
 const { authorsController } = require('../controllers');
 const auth = require('../middlewares/auth')
-const authorMulter = require('../middlewares/authorMulter')
+const uploadImg = require('../middlewares/uploadImg')
 
 router.get('/', authorsController.getAllAuthors);
 
-router.post('/', auth.authorization, auth.restrictTo('admin'), authorMulter.single('photo'), authorsController.createAuthor);
+router.post('/', auth.authorization, auth.restrictTo('admin'), uploadImg.authorpload.single('photo'), authorsController.createAuthor);
 
 router.delete('/:id', auth.authorization, auth.restrictTo('admin'), authorsController.deleteAuthor);
 

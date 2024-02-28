@@ -27,6 +27,7 @@ const checkType = (file, cb) => {
 
 const profileStorage = configureStorage('images/profile/');
 const bookStorage = configureStorage('images/books/');
+const authorStorage = configureStorage('images/books/');
 
 const profileUpload = multer({
     storage: profileStorage,
@@ -40,7 +41,14 @@ const bookUpload = multer({
         checkType(file, cb);
     }
 });
+const authorpload = multer({
+    storage: authorStorage,
+    fileFilter: function (req, file, cb) {
+        checkType(file, cb);
+    }
+});
 module.exports = {
     profileUpload,
-    bookUpload
+    bookUpload,
+    authorpload
 }
