@@ -4,13 +4,7 @@ const Book = require('../models/BooksModel');
 const mongoose = require('mongoose');
 const asyncWrapper = require('../lib/asyncWrapper');
 const CustomError = require('../lib/customError');
-
-const validateCategoryName = (categoryName) => {
-  if (!categoryName || categoryName.trim() === '') {
-    return false;
-  }
-  return true;
-};
+const validateString = require('../lib/validateString');
 
 const getAllCategories = async (req, res, next) => {
 <<<<<<< HEAD
@@ -22,19 +16,19 @@ const getAllCategories = async (req, res, next) => {
   const [err, categories] = await asyncWrapper(Categories.find({}).select('categoryName -_id'));
 >>>>>>> 4e365397608038aca862be4019c47ed87486a86d
   if (err) {
-    return next(new CustomError(err.message, 400));
+    return next(new CustomError('Error Getting The Categories Data', 400));
   }
   return res.json({ message: 'success', data: categories });
 };
 
 const createCategory = async (req, res, next) => {
   const category = req.body;
-  if (!validateCategoryName(category.categoryName)) {
+  if (!new validateString(category.categoryName)) {
     return res.status(400).json({ message: 'Invalid Category Name' });
   }
   const [err, newCategory] = await asyncWrapper(Categories.create(category));
   if (err) {
-    return next(err);
+    return next(new CustomError('Error Creating The Category', 400));
   }
   return res.json(newCategory);
 };
@@ -45,9 +39,9 @@ const deleteCategory = async (req, res, next) => {
     return res.status(404).json({ message: 'Category ID Not Found' });
   }
   if (!err) {
-    res.json(categoryToDelete);
+    return next(new CustomError('Error Deleting The Category', 400));
   }
-  return next(err);
+  res.status(200).json(categoryToDelete);
 };
 
 const updateCategory = async (req, res, next) => {
@@ -57,7 +51,7 @@ const updateCategory = async (req, res, next) => {
     return res.status(404).json({ message: 'Category ID Not Found' });
   }
 
-  if (!validateCategoryName(categoryName)) {
+  if (!validateString(categoryName)) {
     return res.status(400).json({ error: 'Invalid Category Name' });
   }
 
@@ -66,12 +60,11 @@ const updateCategory = async (req, res, next) => {
     { categoryName },
     { runValidators: true, new: true },
   ));
-
-  if (!updateError) {
-    return res.json(updatedCategory);
+  console.log(updatedCategory)
+  if (updateError) {
+    return next(new CustomError('Error Updating The Category', 400));
   }
-
-  return next(updateError);
+  return res.json(updatedCategory);
 };
 
 
@@ -89,10 +82,10 @@ const getCategoryBooks = async (req, res, next) => {
     .limit(limitSize)
     .exec());
   if (err) {
-    return next(err);
+    return next(new CustomError('Error Getting The Data', 400));
   }
   if (!books || books.length === 0) {
-    return res.status(404).json({ message: 'No books found for the specified category.' });
+    return next(new CustomError('No books found for the specified category.', 400));
   }
   return res.status(200).json({ data: books });
 };
@@ -132,7 +125,7 @@ const getPopularCategories = async (req, res, next) => {
   ]));
 
   if (err) {
-    throw next(err);
+    return next(new CustomError('Error Getting The Data', 400));
   }
 
   res.json({ popularCategories });
