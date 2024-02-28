@@ -2,10 +2,9 @@ const jsonWebToken = require('jsonwebtoken');
 const User = require('../models/users')
 const CustomError = require('../lib/customError');
 const userController = require('../controllers/users');
-const asyncWrapper = require('../lib/asyncWrapper');
-function authorization(req, res, next) {
-  const { authorization } = req.headers;
+authorization = (req, res, next) => {
 
+  const { authorization } = req.headers;
   if (!authorization) {
     return next(new CustomError('unautharized', 401));
   }
@@ -19,12 +18,8 @@ function authorization(req, res, next) {
 }
 restrictTo = (role) => {
   return async (req, res, next) => {
-    const [err, user] = await asyncWrapper(User.findById(req.userId));
-    if (err) {
-      return next(new CustomError('Not found', 404));
-    }
-
-    if (user.role !== role) {
+    const userRole = req.headers.role;
+    if (!userRole || userRole !== role) {
       return next(new CustomError('you are not admin', 401));
     }
 

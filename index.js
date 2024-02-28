@@ -3,11 +3,27 @@ const express = require("express");
 const mongoose = require("mongoose");
 const routes = require('./routes');
 const path = require("path");
-
+const cors = require('cors');
+const cookieSession = require("cookie-session");
+const staticFile = path.join(__dirname, 'images')
 dotenv.config();
 
 
 const app = express();
+var corsOptions = {
+  origin: "http://localhost:4200"
+};
+
+app.use(cors(corsOptions));
+
+app.use(express.static(staticFile));
+app.use(
+  cookieSession({
+    name: "goodread-session",
+    keys: ["COOKIE_SECRET"],
+    httpOnly: true
+  })
+);
 const PORT = process.env.PORT;
 const DB = process.env.DATABASE;
 

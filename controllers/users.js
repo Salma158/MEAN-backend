@@ -6,14 +6,16 @@ const fs = require('fs')
 const addOne = async (req, res, next) => {
     const newUser = req.body;
     //const photoFullPath = `${__dirname}images/profile/${req.file.filename}`;
-    const photoFullPath = `${req.protocol}://${req.get('host')}/profile/${req.file.filename}`;
+    if (!req.file || !req.file.filename) {
+        return next(new CustomError('you must add photo', 400));
+    }
     const [err, user] = await asyncWrapper(User.create({
         userName: newUser.userName,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         email: newUser.email,
         password: newUser.password,
-        photo: photoFullPath,
+        photo: req.file.filename,
         role: newUser.role
     }));
     if (err) {
@@ -32,13 +34,18 @@ const logIn = async (req, res, next) => {
     if (err) {
         return next(new CustomError('unautharized', 401));
     }
+    if (!user) {
+        return next(new CustomError('Unauthorized', 401));
+    }
     const valid = await user.verifyPassword(password);
     if (!valid) {
-        return next(new CustomError('unautharized', 401));
+        return next(new CustomError('incorrect password', 401));
     }
-    // eslint-disable-next-line no-underscore-dangle
-    const token = jsonWebToken.sign({ userName, id: user._id }, 'asdfghjkl1qwedfvgb', { expiresIn: '1d' });
+    const token = jsonWebToken.sign({ userName, id: user._id, role: user.role }, process.env.JWTKEY, { expiresIn: '1d' });
+    req.session.token = token;
+    req.session.role = user.role;
     return res.json(token);
+
 }
 const findOne = async (req, res, next) => {
     const userId = req.userId;
@@ -65,11 +72,17 @@ const updateRole = async (req, res, next) => {
     }
     return res.json(user);
 }
+logOut = (req, res) => {
+    req.session = null;
+    return res.status(200).send({ message: "You've been signed out!" });
+
+}
 
 module.exports = {
     addOne,
     logIn,
     findOne,
     getAll,
-    updateRole
+    updateRole,
+    logOut
 };

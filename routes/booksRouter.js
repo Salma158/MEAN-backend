@@ -1,10 +1,10 @@
 const express = require("express")
 const booksRouter = express.Router()
 const booksController = require('../controllers/booksController')
-const upload = require('../middlewares/multerConfig')
+const multerMiddleWare = require('../middlewares/uploadImg');
 const auth = require('../middlewares/auth')
 booksRouter.route('/')
-    .post(auth.authorization, auth.restrictTo('admin'), upload.single("image"), booksController.addBook)
+    .post(auth.authorization, auth.restrictTo('admin'), multerMiddleWare.profileUpload.single("image"), booksController.addBook)
     .get(booksController.getBooks)
 
 booksRouter.route('/popularBooks')

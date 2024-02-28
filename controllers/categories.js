@@ -12,7 +12,7 @@ const validateCategoryName = (categoryName) => {
 };
 
 const getAllCategories = async (req, res, next) => {
-  const [err, categories] = await asyncWrapper(Categories.find({}).select('categoryName -_id'));
+  const [err, categories] = await asyncWrapper(Categories.find({}));
   if (categories.length === 0) {
     return res.status(404).json({ message: 'No data found' });
   }
@@ -76,10 +76,10 @@ const getCategoryBooks = async (req, res, next) => {
   const limitSize = parseInt(req.query.limitSize) || 4;
   const skip = pageNumber * limitSize;
   const [err, books] = await asyncWrapper(Book.find({ category: req.params.id }).select('name -_id')
-  .populate({
-    path: 'author',
-    select: 'firstName lastName -_id'
- })
+    .populate({
+      path: 'author',
+      select: 'firstName lastName -_id'
+    })
     .skip(skip)
     .limit(limitSize)
     .exec());
@@ -94,44 +94,44 @@ const getCategoryBooks = async (req, res, next) => {
 
 
 const getPopularCategories = async (req, res, next) => {
-      const [err, popularCategories] = await asyncWrapper(Book.aggregate([
-          {
-              $group: {
-                  _id: '$category',
-                  bookCount: { $sum: 1 },
-              },
-          },
-          {
-              $lookup: {
-                  from: 'categories',
-                  localField: '_id',
-                  foreignField: '_id',
-                  as: 'category',
-              },
-          },
-          {
-              $unwind: '$category',
-          },
-          {
-              $project: {
-                  categoryName: '$category.categoryName',
-                  bookCount: 1,
-              },
-          },
-          {
-              $sort: { bookCount: -1 },
-          },
-          {
-              $limit: 3,
-          },
-      ]));
+  const [err, popularCategories] = await asyncWrapper(Book.aggregate([
+    {
+      $group: {
+        _id: '$category',
+        bookCount: { $sum: 1 },
+      },
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'category',
+      },
+    },
+    {
+      $unwind: '$category',
+    },
+    {
+      $project: {
+        categoryName: '$category.categoryName',
+        bookCount: 1,
+      },
+    },
+    {
+      $sort: { bookCount: -1 },
+    },
+    {
+      $limit: 3,
+    },
+  ]));
 
-      if (err) {
-          throw next(err);
-      }
+  if (err) {
+    throw next(err);
+  }
 
-      res.json({ popularCategories });
-  
+  res.json({ popularCategories });
+
 };
 
 
