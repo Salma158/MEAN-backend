@@ -3,28 +3,20 @@ const Categories = require('../models/categories');
 const Book = require('../models/BooksModel');
 const mongoose = require('mongoose');
 const asyncWrapper = require('../lib/asyncWrapper');
-
-const validateCategoryName = (categoryName) => {
-  if (!categoryName || categoryName.trim() === '') {
-    return false;
-  }
-  return true;
-};
+const CustomError = require('../lib/customError');
+const validateString = require('../lib/validateString');
 
 const getAllCategories = async (req, res, next) => {
   const [err, categories] = await asyncWrapper(Categories.find({}).select('categoryName -_id'));
-  if (categories.length === 0) {
-    return res.status(404).json({ message: 'No data found' });
-  }
   if (err) {
-    return next(err);
+    return next(new CustomError(err.message, 400));
   }
   return res.json({ message: 'success', data: categories });
 };
 
 const createCategory = async (req, res, next) => {
   const category = req.body;
-  if (!validateCategoryName(category.categoryName)) {
+  if (!new validateString(category.categoryName)) {
     return res.status(400).json({ message: 'Invalid Category Name' });
   }
   const [err, newCategory] = await asyncWrapper(Categories.create(category));
@@ -52,21 +44,20 @@ const updateCategory = async (req, res, next) => {
     return res.status(404).json({ message: 'Category ID Not Found' });
   }
 
-  if (!validateCategoryName(categoryName)) {
+  if (!validateString(categoryName)) {
     return res.status(400).json({ error: 'Invalid Category Name' });
-  }
+}
 
   const [updateError, updatedCategory] = await asyncWrapper(Categories.findOneAndUpdate(
     { _id: req.params.id },
     { categoryName },
     { runValidators: true, new: true },
   ));
-
-  if (!updateError) {
-    return res.json(updatedCategory);
-  }
-
-  return next(updateError);
+    console.log(updatedCategory)
+   if (!updateError) {
+     return res.json(updatedCategory);
+   }
+   return next(updateError);
 };
 
 
