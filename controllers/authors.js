@@ -38,16 +38,16 @@ const createAuthor = async (req, res, next) => {
   // }
   // if(! validateString(req.body.dob)){
   //   return res.status(400).json({ message: 'Invalid Date Of Birth' });
- // }
+  // }
   const authorData = req.body;
   const photoFullPath = (`${req.protocol}://${req.get('host')}/authors/${req.file.filename}`);
   const [err, newAuthor] = await asyncWrapper(Authors.create({
-      firstName: authorData.firstName,
-      lastName: authorData.lastName,
-      dob: authorData.dob,
-      photo: photoFullPath
-    }
-    ));
+    firstName: authorData.firstName,
+    lastName: authorData.lastName,
+    dob: authorData.dob,
+    photo: photoFullPath
+  }
+  ));
   if (err) {
     return next(new CustomError(err.message, 400));
   }
@@ -75,13 +75,13 @@ const updateAuthor = async (req, res, next) => {
   if (err) {
     return next(updateError);
   }
-  if(! validateString(req.body.firstName)){
+  if (!validateString(req.body.firstName)) {
     return res.status(400).json({ message: 'Invalid First Name' });
   }
-  if(! validateString(req.body.lastName)){
+  if (!validateString(req.body.lastName)) {
     return res.status(400).json({ message: 'Invalid Last Name' });
   }
-  if(! validateString(req.body.dob)){
+  if (!validateString(req.body.dob)) {
     return res.status(400).json({ message: 'Invalid Date Of Birth' });
   }
   const [updateError, updatedAuthor] = await asyncWrapper(Authors.findOneAndUpdate(
@@ -107,41 +107,56 @@ const getAuthorDetails = async (req, res, next) => {
 
 };
 
+const getAuthorIdByName = async (req, res, next) => {
+  const { firstName, lastName } = req.params;
+  const [err, author] = await asyncWrapper(Categories.findOne({ firstName, lastName }));
+  if (err) {
+    return next(err);
+  }
+  if (!author) {
+    throw new Error('Author not found');
+  }
+  return author._id;
+};
+
+
+
+
 const getPopularAuthors = async (req, res, next) => {
   const [err, popularAuthors] = await asyncWrapper(Book.aggregate([
-      {
-          $group: {
-              _id: '$author',
-              bookCount: { $sum: 1 },
-          },
+    {
+      $group: {
+        _id: '$author',
+        bookCount: { $sum: 1 },
       },
-      {
-          $lookup: {
-              from: 'authors',
-              localField: '_id',
-              foreignField: '_id',
-              as: 'author',
-          },
+    },
+    {
+      $lookup: {
+        from: 'authors',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'author',
       },
-      {
-          $unwind: '$author',
+    },
+    {
+      $unwind: '$author',
+    },
+    {
+      $project: {
+        firstName: '$author.firstName',
+        bookCount: 1,
       },
-      {
-          $project: {
-              firstName: '$author.firstName',
-              bookCount: 1,
-          },
-      },
-      {
-          $sort: { bookCount: -1 },
-      },
-      {
-          $limit: 3,
-      },
+    },
+    {
+      $sort: { bookCount: -1 },
+    },
+    {
+      $limit: 3,
+    },
   ]));
 
   if (err) {
-      throw next(err);
+    throw next(err);
   }
 
   res.json({ popularAuthors });
@@ -152,6 +167,7 @@ module.exports = {
   createAuthor,
   deleteAuthor,
   updateAuthor,
-  getPopularAuthors,
-  getAuthorDetails,
+  // popularAuthor,
+  getAllAuthorsBooks,
+  getAuthorIdByName
 };

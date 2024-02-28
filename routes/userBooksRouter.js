@@ -12,6 +12,15 @@ userBooksRouter.route("/:id")
     .patch(userBooksController.editUserBook)
     .delete(userBooksController.deleteUserBook)
 
+userBooksRouter.route("/reviews/:book")
+    .get(userBooksController.getBookReviews)
+
+userBooksRouter.route("/:user/:book")
+    .get(userBooksController.getUserBook)
+
+
+    
+
 
 
 module.exports = userBooksRouter

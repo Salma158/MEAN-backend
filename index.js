@@ -7,8 +7,6 @@ const cors = require('cors');
 const cookieSession = require("cookie-session");
 const staticFile = path.join(__dirname, 'images')
 dotenv.config();
-
-
 const app = express();
 var corsOptions = {
   origin: "http://localhost:4200"
@@ -35,7 +33,6 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
-
 app.use(express.json());
 app.use(routes);
 

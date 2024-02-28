@@ -5,7 +5,6 @@ const jsonWebToken = require('jsonwebtoken');
 const fs = require('fs')
 const addOne = async (req, res, next) => {
     const newUser = req.body;
-    //const photoFullPath = `${__dirname}images/profile/${req.file.filename}`;
     if (!req.file || !req.file.filename) {
         return next(new CustomError('you must add photo', 400));
     }
