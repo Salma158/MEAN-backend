@@ -3,6 +3,7 @@ const Categories = require('../models/categories');
 const Book = require('../models/BooksModel');
 const mongoose = require('mongoose');
 const asyncWrapper = require('../lib/asyncWrapper');
+const CustomError = require('../lib/customError');
 
 const validateCategoryName = (categoryName) => {
   if (!categoryName || categoryName.trim() === '') {
@@ -12,12 +13,16 @@ const validateCategoryName = (categoryName) => {
 };
 
 const getAllCategories = async (req, res, next) => {
+<<<<<<< HEAD
   const [err, categories] = await asyncWrapper(Categories.find({}));
   if (categories.length === 0) {
     return res.status(404).json({ message: 'No data found' });
   }
+=======
+  const [err, categories] = await asyncWrapper(Categories.find({}).select('categoryName -_id'));
+>>>>>>> 4e365397608038aca862be4019c47ed87486a86d
   if (err) {
-    return next(err);
+    return next(new CustomError(err.message, 400));
   }
   return res.json({ message: 'success', data: categories });
 };
