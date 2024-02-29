@@ -11,5 +11,4 @@ router.get('/', auth.authorization, auth.restrictTo('admin'), userController.get
 router.patch('/:id', auth.authorization, auth.restrictTo('admin'), userController.updateRole)
 router.get('/authors/:id', auth.authorization, auth.restrictTo('admin'), authorsController.getAuthorDetails);
 
-router.post("logout", userController.logOut);
 module.exports = router;
