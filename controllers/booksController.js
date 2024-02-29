@@ -11,14 +11,13 @@ const { text } = require("express");
 
 //------------ adding new book ---------------
 const addBook = async (req, res, next) => {
-  const { author, category, name, description } = req.body;
-  // const photoFullPath = `${req.protocol}://${req.get('host')}images/books/${req.file.filename}`;
+  const { author, category, name, description } = req.body
   const newBook = new Book({
     author,
     category,
     name,
-    // image: photoFullPath,
-    description,
+    //image: req.file.filename,
+    description
   });
   const [err, book] = await asyncWrapper(newBook.save());
 
@@ -135,12 +134,12 @@ const getBookById = async (req, res, next) => {
 
   const [err, book] = await asyncWrapper(
     Book.findById(id)
-    .populate({ path: "author", select: "firstName lastName" })
-    .populate({ path: "category", select: "categoryName" })
-    .exec()
+      .populate({ path: "author", select: "firstName lastName" })
+      .populate({ path: "category", select: "categoryName" })
+      .exec()
   );
   if (err) {
-   return next(new CustomError("Error getting the book!", 500));
+    return next(new CustomError("Error getting the book!", 500));
   }
   res.status(200).json({
     status: "success",
@@ -152,7 +151,7 @@ const getBookById = async (req, res, next) => {
 
 const getPopularBooks = async (req, res, next) => {
   const [err, popularBooks] = await asyncWrapper(
-     UserBook.aggregate([
+    UserBook.aggregate([
       {
         $match: {
           status: "already read",
@@ -180,9 +179,9 @@ const getPopularBooks = async (req, res, next) => {
   }
   const bookIds = popularBooks.map((item) => item._id);
   const popularBooksDetails = await Book.find({ _id: { $in: bookIds } })
-  .populate({path: 'author' , select: 'firstName lastName'})
-  .populate({path: 'category' , select: 'categoryName'})
-  .exec()
+    .populate({ path: 'author', select: 'firstName lastName' })
+    .populate({ path: 'category', select: 'categoryName' })
+    .exec()
 
 
   res.status(200).json({

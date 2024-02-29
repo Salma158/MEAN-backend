@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const categorySchema = new mongoose.Schema({
   categoryName: {
     type: String,
+    maxlength: 50,
     required: true,
     unique: true,
     validate: {
@@ -15,6 +16,6 @@ const categorySchema = new mongoose.Schema({
   },
 });
 
-const category = mongoose.model('categories', categorySchema);
+const category = mongoose.model('category', categorySchema);
 
 module.exports = category;

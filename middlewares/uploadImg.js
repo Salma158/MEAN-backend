@@ -1,15 +1,18 @@
 const multer = require('multer');
 const path = require('path');
+const CustomError = require('../lib/customError');
 
-const storage = multer.diskStorage({
-    destination: (req, res, cb) => {
-        cb(null, 'images/profile/')
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); // Generate unique filename
-    }
-
-});
+function configureStorage(destinationPath) {
+    const storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, destinationPath);
+        },
+        filename: function (req, file, cb) {
+            cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+        }
+    });
+    return storage;
+}
 const checkType = (file, cb) => {
     const types = /jpeg|jpg|png|gif/;
     const extension = types.test(path.extname(file.originalname).toLowerCase());
@@ -18,23 +21,34 @@ const checkType = (file, cb) => {
     if (mimetype && extension) {
         return cb(null, true);
     } else {
-        cb('Error: Images only!');
+        cb(new CustomError('Error: Images only!'));
     }
 }
-const upload = multer({
-    storage: storage,
+
+const profileStorage = configureStorage('images/profile/');
+const bookStorage = configureStorage('images/books/');
+const authorStorage = configureStorage('images/books/');
+
+const profileUpload = multer({
+    storage: profileStorage,
     fileFilter: function (req, file, cb) {
         checkType(file, cb);
     }
-}).single('photo');
-
-const multerMiddleware = (req, res, next) => {
-    upload(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ message: 'File upload failed', error: err });
-        }
-        next();
-    });
-};
-
-module.exports = multerMiddleware;
+});
+const bookUpload = multer({
+    storage: bookStorage,
+    fileFilter: function (req, file, cb) {
+        checkType(file, cb);
+    }
+});
+const authorpload = multer({
+    storage: authorStorage,
+    fileFilter: function (req, file, cb) {
+        checkType(file, cb);
+    }
+});
+module.exports = {
+    profileUpload,
+    bookUpload,
+    authorpload
+}

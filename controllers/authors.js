@@ -1,53 +1,74 @@
 /* eslint-disable linebreak-style */
 const Authors = require('../models/authors');
 const asyncWrapper = require('../lib/asyncWrapper');
-const Books = require('../models/BooksModel');
+const Book = require('../models/BooksModel');
 const CustomError = require('../lib/customError');
+const validateString = require('../lib/validateString');
 
-// get author using pagination
+// get authors using pagination
 const getAllAuthors = async (req, res, next) => {
-  const page = parseInt(req.query.page, 10) || 0;
-  const limit = parseInt(req.query.limit, 10) || 20;
-  const skip = page * limit;
-  const authorsCount = await Authors.countDocuments();
-  if (skip >= authorsCount) {
-    return next(new CustomError('No More Authors To Display', 404));
-  }
+  const pageNumber = parseInt(req.query.pageNumber, 10) || 0;
+  const limitSize = parseInt(req.query.limitSize, 10) || 4;
+  const skip = pageNumber * limitSize;
   const [err, authors] = await asyncWrapper(Authors.find({}).select('firstName lastName -_id')
-    .skip((page) * limit)
-    .limit(limit)
+    .skip(skip)
+    .limit(limitSize)
     .exec());
   if (authors.length === 0) {
-    return res.status(404).json({ message: 'No data found' });
+    return next(new CustomError("No Data Found!", 404));
   }
   if (err) {
-    return next(err);
+    return next(new CustomError("Error Getting All Authors Data", 500));
   }
   return res.json({ message: 'success', data: authors });
 };
 
-const createAuthor = async (req, res) => {
-  const author = req.body;
-  const newAuthor = await asyncWrapper(Authors.create(author));
-  return res.json(newAuthor);
+
+const createAuthor = async (req, res, next) => {
+
+  const authorData = req.body;
+  const photoFullPath = (`${req.protocol}://${req.get('host')}/images/authors/${req.file.filename}`);
+  const [err, newAuthor] = await asyncWrapper(Authors.create({
+    firstName: authorData.firstName,
+    lastName: authorData.lastName,
+    dob: authorData.dob,
+    photo: photoFullPath
+  }
+  ));
+  if (!validateString(req.body.firstName)) {
+    return next(new CustomError("No First Name Entered", 400));
+  }
+  if (!validateString(req.body.lastName)) {
+    return next(new CustomError("No Last Name Entered", 400));
+  }
+  if (!validateString(req.body.dob)) {
+    return next(new CustomError("No Date Of Birth Entered", 400));
+  }
+  if (err) {
+    return next(new CustomError(err.message, 404));
+  }
+  return res.status(201).json({ message: 'success', data: newAuthor });
 };
 
 const deleteAuthor = async (req, res, next) => {
   const [err, authorToDelete] = await asyncWrapper(Authors.findByIdAndDelete(req.params.id));
   if (!authorToDelete) {
-    return res.status(404).json({ message: 'Author ID Not Found' });
+    return next(new CustomError("Author Not Found!", 404));
   }
-  if (!err) {
-    res.json(authorToDelete);
+  if (err) {
+    return next(new CustomError("Error Deleting The Author", 500));
   }
-  return next(err);
+  res.status(200).json(authorToDelete);
 };
 
 const updateAuthor = async (req, res, next) => {
   const { firstName, lastName, dob } = req.body;
-  const authorToUpdate = await asyncWrapper(Authors.findById(req.params.id));
-  if (!authorToUpdate[1]) {
-    return res.status(404).json({ message: 'Author ID Not Found' });
+  const [err, authorToUpdate] = await asyncWrapper(Authors.findById(req.params.id));
+  if (!authorToUpdate) {
+    return next(new CustomError("Author Not Found!", 404));
+  }
+  if (err) {
+    return next(new CustomError("Error Finding The Author", 500));
   }
 
   const [updateError, updatedAuthor] = await asyncWrapper(Authors.findOneAndUpdate(
@@ -55,42 +76,75 @@ const updateAuthor = async (req, res, next) => {
     { firstName, lastName, dob },
     { runValidators: true },
   ));
-  if (!updateError) {
-    return res.json(updatedAuthor);
+  if (updateError) {
+    return next(new CustomError("Error Updating The Author", 500));
   }
-
-  return next(updateError);
+  return res.status(200).json(updatedAuthor);
 };
 
-const getAllAuthorsBooks = async (req, res, next) => {
-  const [error, authorBooks] = await asyncWrapper(Books.find({ _id: req.params.AuthorId }));
-  if (error) {
-    return next(error);
+const getAuthorDetails = async (req, res, next) => {
+  const authorId = req.params.id;
+  const [foundError, authorDetails] = await asyncWrapper(Authors.findById(authorId, 'firstName lastName dob'));
+  if (foundError) {
+    return next(new CustomError("Error Finding The Author", 500));
   }
-  return res.json({ data: authorBooks });
+  // If ID characters is changed
+  if (!authorDetails) {
+    return next(new CustomError("Author Not Found!", 404));
+  }
+  const [bookFound, books] = await asyncWrapper(Book.find({ author: authorId }, 'name status'));
+  if (bookFound) {
+    return next(new CustomError("Error Finding The Books", 500));
+  }
+  // check displaying the status and add the avg reviews and total
+  return res.status(200).json({ author: authorDetails, books: books });
 };
 
-const getAuthorIdByName = async (req, res, next) => {
-  const { firstName, lastName } = req.params;
-  const [err, author] = await asyncWrapper(Categories.findOne({ firstName, lastName }));
+const getPopularAuthors = async (req, res, next) => {
+  const [err, popularAuthors] = await asyncWrapper(Book.aggregate([
+    {
+      $group: {
+        _id: '$author',
+        bookCount: { $sum: 1 },
+      },
+    },
+    {
+      $lookup: {
+        from: 'authors',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'author',
+      },
+    },
+    {
+      $unwind: '$author',
+    },
+    {
+      $project: {
+        firstName: '$author.firstName',
+        bookCount: 1,
+      },
+    },
+    {
+      $sort: { bookCount: -1 },
+    },
+    {
+      $limit: 3,
+    },
+  ]));
+
   if (err) {
-    return next(err);
+    return next(new CustomError("Error Finding The Popular Authors", 500));
   }
-  if (!author) {
-    throw new Error('Author not found');
-  }
-  return author._id;
-};
 
-
-// Popular Author
+  res.status(200).json({ popularAuthors });
+}
 
 module.exports = {
   getAllAuthors,
   createAuthor,
   deleteAuthor,
   updateAuthor,
-  // popularAuthor,
-  getAllAuthorsBooks,
-  getAuthorIdByName
+  getPopularAuthors,
+  getAuthorDetails
 };
