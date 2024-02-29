@@ -23,6 +23,7 @@ const addBook = async (req, res, next) => {
 
   if (err) {
     if (err.name === "ValidationError") {
+      console.log("hii")
       return handleValidationError(err, next);
     }
     return next(new CustomError("Error adding the book!", 500));
@@ -80,6 +81,7 @@ const getBooks = async (req, res, next) => {
     if (skip >= booksCount)
       return next(new CustomError("No more books to view!", 404));
   }
+  
 
   const [err, books] = await asyncWrapper(Book.find()
   .skip(skip).limit(limit)
@@ -88,13 +90,13 @@ const getBooks = async (req, res, next) => {
   if (err) {
     return next(new CustomError("Error getting the books!", 500));
   }
-  
+
   for (let i = 0; i < books.length; i++) {
     try {
-      const avgRating = await calculateAvgRating(books[i]._id);
-      books[i] = { ...books[i].toObject(), avgRating };
-    } catch (error) {
-      return next(error);
+      const Rating = await calculateAvgRating(books[i]._id);
+      books[i] = { ...books[i].toObject(), ...Rating };
+    } catch (err) {
+      return next(new CustomError("Error getting the books!", 500));
     }
   }
   
@@ -112,12 +114,12 @@ const calculateAvgRating = async function(bookId){
     UserBook.find({ book: bookId, rating: { $exists: true } }).select("rating")
   );
 
-  if (err) {
-    throw new CustomError("Error calculating average rating!", 500);
-  }
-
   if (!ratings || ratings.length === 0) {
     return 0;
+  }
+
+  if (err) {
+    throw new CustomError("Error calculating average rating!", 500);
   }
 
   const totalRatings = ratings.reduce((acc, curr) => acc + curr.rating, 0);
@@ -125,19 +127,26 @@ const calculateAvgRating = async function(bookId){
   const avgRating = totalRatings / ratings.length;
   console.log(avgRating)
 
-  return avgRating
+  return {totalRatings, avgRating}
 };
 
 // --------------- get book by id -----------------
 const getBookById = async (req, res, next) => {
   const id = req.params.id;
 
-  const [err, book] = await asyncWrapper(
+  let [err, book] = await asyncWrapper(
     Book.findById(id)
       .populate({ path: "author", select: "firstName lastName" })
       .populate({ path: "category", select: "categoryName" })
       .exec()
   );
+  try {
+    const avgRating = await calculateAvgRating(book._id);
+    book = { ...book.toObject(), avgRating };
+  } catch (err) {
+    return next(new CustomError("Error getting the book!", 500));
+  }
+
   if (err) {
     return next(new CustomError("Error getting the book!", 500));
   }
@@ -169,7 +178,7 @@ const getPopularBooks = async (req, res, next) => {
         },
       },
       {
-        $limit: 1,
+        $limit: 8,
       },
     ])
   );
@@ -182,6 +191,15 @@ const getPopularBooks = async (req, res, next) => {
     .populate({ path: 'author', select: 'firstName lastName' })
     .populate({ path: 'category', select: 'categoryName' })
     .exec()
+
+    for (let i = 0; i < popularBooksDetails.length; i++) {
+      try {
+        const avgRating = await calculateAvgRating(popularBooksDetails[i]._id);
+        popularBooksDetails[i] = { ...popularBooksDetails[i].toObject(), avgRating };
+      } catch (error) {
+        return next(error);
+      }
+    }
 
 
   res.status(200).json({

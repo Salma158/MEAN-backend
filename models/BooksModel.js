@@ -8,7 +8,7 @@ const bookSchema = new mongoose.Schema({
     required: [true, "Please specify the author id"],
     validate: {
       validator: async function(id) {
-        const author = await mongoose.model('authors').findById(id);
+        const author = await mongoose.model('author').findById(id);
         return author !== null;
       },
       message: props => `Author with id ${props.value} does not exist`
@@ -20,7 +20,7 @@ const bookSchema = new mongoose.Schema({
     required: [true, "Please specify the category id"],
     validate: {
       validator: async function(id) {
-        const category = await mongoose.model('categories').findById(id);
+        const category = await mongoose.model('category').findById(id);
         return category !== null;
       },
       message: props => `Category with id ${props.value} does not exist`
@@ -29,7 +29,7 @@ const bookSchema = new mongoose.Schema({
   name: { 
     type: String, 
     trim: true, 
-    maxlength: 50, 
+    maxlength: 100, 
     minlength: 3, 
     required: [true, "Please specify the book name"], 
     unique: [true, "Book with this name already exists!"] 
@@ -48,7 +48,7 @@ const bookSchema = new mongoose.Schema({
     type: String, 
     trim: true, 
     minlength: 10, 
-    maxlength: 500, 
+    maxlength: 1000, 
     required: [true, "Please specify the description of the book, at least 10 characters"] 
   },
   createdAt: { type: Date, default: Date.now },
