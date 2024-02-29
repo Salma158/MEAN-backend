@@ -9,6 +9,7 @@ dotenv.config();
 const app = express();
 var corsOptions = {
   origin: "http://localhost:4200",
+  optionsSuccessStatus: 200
 
 };
 
