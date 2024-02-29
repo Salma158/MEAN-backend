@@ -6,7 +6,8 @@ const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
 const UserBook = require(userbooksModelPath);
 const asyncWrapper = require("../lib/asyncWrapper");
 const CustomError = require("../lib/customError");
-const handleValidationError = require("./../lib/customValidator")
+const handleValidationError = require("./../lib/customValidator");
+const { text } = require("express");
 
 //------------ adding new book ---------------
 const addBook = async (req, res, next) => {
@@ -81,13 +82,21 @@ const getBooks = async (req, res) => {
       return next(new CustomError("No more books to view!", 404));
   }
 
-  const [err, books] = await asyncWrapper(Book.find().skip(skip).limit(limit));
+  const [err, books] = await asyncWrapper(Book.find()
+  .populate({ path: "author", select: "firstName lastName" })
+  .skip(skip).limit(limit));
 
-  books.forEach( book => {
-    book.avgRating = calculateAvgRating(book._id)
-  });
+
+  for (let i = 0; i < books.length; i++) {
+    try {
+      const avgRating = await calculateAvgRating(books[i]._id);
+      books[i] = { ...books[i].toObject(), avgRating };
+    } catch (error) {
+      return next(error);
+    }
+  }
   
-
+  console.log(books)
   if (err) {
     return next(new CustomError("Error getting the books!", 500));
   }
@@ -97,6 +106,27 @@ const getBooks = async (req, res) => {
       books,
     },
   });
+};
+
+const calculateAvgRating = async function(bookId){
+  const [err, ratings] = await asyncWrapper(
+    UserBook.find({ book: bookId, rating: { $exists: true } }).select("rating")
+  );
+
+  if (err) {
+    throw new CustomError("Error calculating average rating!", 500);
+  }
+
+  if (!ratings || ratings.length === 0) {
+    return 0;
+  }
+
+  const totalRatings = ratings.reduce((acc, curr) => acc + curr.rating, 0);
+  
+  const avgRating = totalRatings / ratings.length;
+  console.log(avgRating)
+
+  return avgRating
 };
 
 // --------------- get book by id -----------------
@@ -184,29 +214,7 @@ const searchBook = async (req, res, next) => {
   });
 };
 
-const calculateAvgRating = async (req, res, next) => {
-  const { bookId } = req.params
-  const [err, ratings] = await asyncWrapper(
-    UserBook.find({ book: bookId, rating: { $exists: true } }).select("rating")
-  );
-  if (err) {
-    throw new CustomError("Error calculating average rating!", 500);
-  }
 
-  if (ratings.length === 0) {
-    return 0;
-  }
-
-  const totalRatings = ratings.reduce((acc, curr) => acc + curr.rating, 0);
-  const avgRating = totalRatings / ratings.length;
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      avgRating,
-    },
-  });
-};
 
 module.exports = {
   addBook,

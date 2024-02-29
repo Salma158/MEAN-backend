@@ -22,16 +22,22 @@ const getUserBooksByStatus = async (req, res, next) => {
       return next(new CustomError("No more user books to view!", 404));
   }
 
-  const [err, userBooks] = await asyncWrapper(
-    UserBook.find({ user, status })
-      .populate("book")
-      .skip(skip)
-      .limit(limit)
-  );
+  let query = { user };
+    if (status) {
+      query.status = status;
+    }
+
+    const [err, userBooks] = await asyncWrapper(
+      UserBook.find(query)
+        .populate("book")
+        .skip(skip)
+        .limit(limit)
+    );
   if (err) {
     return next(new CustomError("Error getting user books!", 500));
   }
 
+  console.log(userBooks)
   res.status(200).json({
     status: "success",
     data: {
@@ -58,6 +64,8 @@ const editUserBook = async (req, res, next) => {
   if (err) {
     return next(new CustomError("Error updating user book!", 500));
   }
+
+
 
   res.status(200).json({
     status: "success",

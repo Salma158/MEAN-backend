@@ -33,7 +33,7 @@ app.use(routes);
 
 
 
-// app.use((error, req, res, next) => res.status(error.status).json({ error: error.message }));
+ app.use((error, req, res, next) => res.status(error.status).json({ error: error.message }));
 
 app.listen(PORT, () => {
   console.log(`server is running on port: ${PORT}`);
