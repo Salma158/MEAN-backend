@@ -145,7 +145,6 @@ module.exports = {
   createAuthor,
   deleteAuthor,
   updateAuthor,
-  // popularAuthor,
-  getAllAuthorsBooks,
-  getAuthorIdByName
+  getPopularAuthors,
+  getAuthorDetails
 };
