@@ -4,7 +4,7 @@ const { isURL } = require("validator");
 const bookSchema = new mongoose.Schema({
   author: { 
     type: mongoose.Types.ObjectId, 
-    ref: 'authors', 
+    ref: 'author', 
     required: [true, "Please specify the author id"],
     validate: {
       validator: async function(id) {
@@ -16,7 +16,7 @@ const bookSchema = new mongoose.Schema({
   },
   category: { 
     type: mongoose.Types.ObjectId, 
-    ref: 'categories', 
+    ref: 'category', 
     required: [true, "Please specify the category id"],
     validate: {
       validator: async function(id) {

@@ -80,13 +80,21 @@ const getBooks = async (req, res) => {
       return next(new CustomError("No more books to view!", 404));
   }
 
-  const [err, books] = await asyncWrapper(Book.find().skip(skip).limit(limit));
-
-  books.forEach(book => {
-    book.avgRating = calculateAvgRating(book._id)
-  });
+  const [err, books] = await asyncWrapper(Book.find()
+  .populate({ path: "author", select: "firstName lastName" })
+  .skip(skip).limit(limit));
 
 
+  for (let i = 0; i < books.length; i++) {
+    try {
+      const Rating = await calculateAvgRating(books[i]._id);
+      books[i] = { ...books[i].toObject(), ...Rating };
+    } catch (error) {
+      return next(error);
+    }
+  }
+  
+  console.log(books)
   if (err) {
     return next(new CustomError("Error getting the books!", 500));
   }
@@ -96,6 +104,27 @@ const getBooks = async (req, res) => {
       books,
     },
   });
+};
+
+const calculateAvgRating = async function(bookId){
+  const [err, ratings] = await asyncWrapper(
+    UserBook.find({ book: bookId, rating: { $exists: true } }).select("rating")
+  );
+
+  if (err) {
+    throw new CustomError("Error calculating average rating!", 500);
+  }
+
+  if (!ratings || ratings.length === 0) {
+    return 0;
+  }
+
+  const totalRatings = ratings.reduce((acc, curr) => acc + curr.rating, 0);
+  
+  const avgRating = totalRatings / ratings.length;
+  console.log(avgRating)
+
+  return {totalRatings, avgRating}
 };
 
 // --------------- get book by id -----------------
@@ -179,30 +208,6 @@ const searchBook = async (req, res, next) => {
     status: "success",
     data: {
       books,
-    },
-  });
-};
-
-const calculateAvgRating = async (req, res, next) => {
-  const { bookId } = req.params
-  const [err, ratings] = await asyncWrapper(
-    UserBook.find({ book: bookId, rating: { $exists: true } }).select("rating")
-  );
-  if (err) {
-    throw new CustomError("Error calculating average rating!", 500);
-  }
-
-  if (ratings.length === 0) {
-    return 0;
-  }
-
-  const totalRatings = ratings.reduce((acc, curr) => acc + curr.rating, 0);
-  const avgRating = totalRatings / ratings.length;
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      avgRating,
     },
   });
 };
