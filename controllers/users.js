@@ -34,15 +34,14 @@ const logIn = async (req, res, next) => {
         return next(new CustomError('unautharized', 401));
     }
     if (!user) {
-        return next(new CustomError('Unauthorized', 401));
+        return next(new CustomError('Invalid user Name', 401));
     }
     const valid = await user.verifyPassword(password);
     if (!valid) {
         return next(new CustomError('incorrect password', 401));
     }
     const token = jsonWebToken.sign({ userName, id: user._id, role: user.role }, process.env.JWTKEY, { expiresIn: '1d' });
-    req.session.token = token;
-    req.session.role = user.role;
+
     return res.json(token);
 
 }

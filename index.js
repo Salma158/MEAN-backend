@@ -7,11 +7,8 @@ const cors = require('cors');
 const staticFile = path.join(__dirname, 'images')
 dotenv.config();
 const app = express();
-var corsOptions = {
-  origin: "http://localhost:4200"
-};
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(express.static(staticFile));
 
