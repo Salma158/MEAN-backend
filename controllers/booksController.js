@@ -70,7 +70,7 @@ const deleteBook = async (req, res) => {
 };
 
 //------------ get all books --------------
-const getBooks = async (req, res) => {
+const getBooks = async (req, res, next) => {
   const page = req.query.page * 1 || 1;
   const limit = req.query.limit * 1 || 20;
   const skip = (page - 1) * limit;
@@ -82,10 +82,13 @@ const getBooks = async (req, res) => {
   }
 
   const [err, books] = await asyncWrapper(Book.find()
-  .populate({ path: "author", select: "firstName lastName" })
-  .skip(skip).limit(limit));
+  .skip(skip).limit(limit)
+  .populate({ path: "author", select: "firstName lastName" }));
 
-
+  if (err) {
+    return next(new CustomError("Error getting the books!", 500));
+  }
+  
   for (let i = 0; i < books.length; i++) {
     try {
       const avgRating = await calculateAvgRating(books[i]._id);
@@ -95,10 +98,7 @@ const getBooks = async (req, res) => {
     }
   }
   
-  console.log(books)
-  if (err) {
-    return next(new CustomError("Error getting the books!", 500));
-  }
+  
   res.status(200).json({
     status: "success",
     data: {
