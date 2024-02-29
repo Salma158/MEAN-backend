@@ -4,7 +4,7 @@ const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
 const UserBook = require(userbooksModelPath);
 const asyncWrapper = require("./../lib/asyncWrapper");
 const CustomError = require("../lib/customError");
-const handleValidationError = require("../lib/customValidator")
+const handleValidationError = require("../lib/customValidator");
 
 // ---------get user books by user id according to the status------------
 const getUserBooksByStatus = async (req, res, next) => {
@@ -13,20 +13,21 @@ const getUserBooksByStatus = async (req, res, next) => {
   const limit = req.query.limit * 1 || 20;
   const skip = (page - 1) * limit;
 
-  if (req.query.page) {
-    const userBooksCount = await UserBook.countDocuments({
-      user,
-      status,
-    });
-    if (skip >= userBooksCount)
-      return next(new CustomError("No more user books to view!", 404));
+  const userBooksCount = await UserBook.countDocuments({
+    user,
+    status,
+  });
+  if (req.query.page && skip >= userBooksCount) {
+    return next(new CustomError("No more user books to view!", 404));
+  }
+
+  let query = { user };
+  if (status) {
+    query.status = status
   }
 
   const [err, userBooks] = await asyncWrapper(
-    UserBook.find({ user, status })
-      .populate("book")
-      .skip(skip)
-      .limit(limit)
+    UserBook.find(query).populate("book").skip(skip).limit(limit)
   );
   if (err) {
     return next(new CustomError("Error getting user books!", 500));
@@ -35,6 +36,7 @@ const getUserBooksByStatus = async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: {
+      total: userBooksCount,
       userBooks,
     },
   });
@@ -76,8 +78,9 @@ const addUserBook = async (req, res, next) => {
     status,
   });
 
-  const [err, addedUserBook] = await asyncWrapper(newUserBook.save(), {new: true});
-
+  const [err, addedUserBook] = await asyncWrapper(newUserBook.save(), {
+    new: true,
+  });
 
   if (err) {
     if (err.name === "ValidationError") {
@@ -85,7 +88,6 @@ const addUserBook = async (req, res, next) => {
     }
     return next(new CustomError("Error adding user book!", 500));
   }
-
 
   res.status(201).json({
     status: "success",
@@ -111,11 +113,12 @@ const deleteUserBook = async (req, res, next) => {
   });
 };
 
-
 const getUserBook = async (req, res, next) => {
   const { user, book } = req.params;
 
-  const [err, userBook] = await asyncWrapper(UserBook.findOne({ user, book }).populate("book"));
+  const [err, userBook] = await asyncWrapper(
+    UserBook.findOne({ user, book }).populate("book")
+  );
 
   if (err) {
     return next(new CustomError("Error finding user book!", 500));
@@ -135,8 +138,12 @@ const getUserBook = async (req, res, next) => {
 
 const getBookReviews = async (req, res, next) => {
   const { book } = req.params;
-  const [err, bookReviews] = await asyncWrapper(UserBook.find({ book, review: { $exists: true, $ne: null } }).populate("user"));
-  console.log(bookReviews)
+  const [err, bookReviews] = await asyncWrapper(
+    UserBook.find({ book, review: { $exists: true, $ne: null } }).populate(
+      "user"
+    )
+  );
+  console.log(bookReviews);
   if (err) {
     return next(new CustomError("Error getting book reviews!", 500));
   }
@@ -144,7 +151,7 @@ const getBookReviews = async (req, res, next) => {
     status: "success",
     data: {
       bookReviews,
-    }, 
+    },
   });
 };
 
@@ -154,5 +161,5 @@ module.exports = {
   addUserBook,
   deleteUserBook,
   getUserBook,
-  getBookReviews
+  getBookReviews,
 };

@@ -4,8 +4,9 @@ const booksController = require('../controllers/booksController')
 const multerMiddleWare = require('../middlewares/uploadImg');
 const auth = require('../middlewares/auth')
 booksRouter.route('/')
-    .post(auth.authorization, auth.restrictTo('admin'),
-        multerMiddleWare.profileUpload.single("image"),
+    .post(
+        // auth.authorization, auth.restrictTo('admin'),
+        // multerMiddleWare.profileUpload.single("image"),
         booksController.addBook)
     .get(booksController.getBooks)
 

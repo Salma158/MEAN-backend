@@ -4,6 +4,7 @@ const asyncWrapper = require('../lib/asyncWrapper');
 const Book = require('../models/BooksModel');
 const CustomError = require('../lib/customError');
 const validateString = require('../lib/validateString');
+const booksController = require('./booksController')
 
 // get authors using pagination
 const getAllAuthors = async (req, res, next) => {
@@ -95,6 +96,14 @@ const getAuthorDetails = async (req, res, next) => {
   const [bookFound, books] = await asyncWrapper(Book.find({ author: authorId }, 'name status'));
   if (bookFound) {
     return next(new CustomError("Error Finding The Books", 500));
+  }
+  for (let i = 0; i < books.length; i++) {
+    try {
+      const ratingDetails = await booksController.calculateAvgRating(books[i]._id);
+      books[i] = { ...books[i].toObject(), ...ratingDetails };
+    } catch (err) {
+      return next(new CustomError("Error getting book ratings", 500));
+    }
   }
   // check displaying the status and add the avg reviews and total
   return res.status(200).json({ author: authorDetails, books: books });
