@@ -6,12 +6,11 @@ const fs = require('fs')
 const addOne = async (req, res, next) => {
     const { userName, firstName, lastName, email, password, role } = req.body;
 
-    // Check if a file was uploaded
+
     if (!req.file) {
         return next(new CustomError('You must add a photo', 400));
     }
 
-    // Create a new user object with the uploaded file
     const newUser = {
         userName,
         firstName,
@@ -19,11 +18,11 @@ const addOne = async (req, res, next) => {
         email,
         password,
         role,
-        photo: req.file.filename // Assuming req.file.filename contains the name of the uploaded file
+        photo: req.file.filename
     };
     const [err, user] = await asyncWrapper(User.create(newUser));
     if (err) {
-        //fs.unlinkSync(req.file.path);
+        fs.unlinkSync(req.file.path);
         return next(new CustomError(err.message, 400));
     }
     res.status(201).json({ message: 'User created successfully', user });
