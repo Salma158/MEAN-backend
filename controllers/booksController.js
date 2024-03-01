@@ -1,7 +1,7 @@
 const path = require("path");
 const parentDir = path.resolve(__dirname, "..");
 const booksModelPath = path.join(parentDir, "models", "BooksModel");
-const Book = require(booksModelPath);
+const Book = require('../models/BooksModel');
 const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
 const UserBook = require(userbooksModelPath);
 const asyncWrapper = require("../lib/asyncWrapper");
