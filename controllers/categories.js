@@ -7,7 +7,7 @@ const CustomError = require('../lib/customError');
 const validateString = require('../lib/validateString');
 
 const getAllCategories = async (req, res, next) => {
-  const [err, categories] = await asyncWrapper(Categories.find({}).select('categoryName -_id'));
+  const [err, categories] = await asyncWrapper(Categories.find({}));
   if (err) {
     return next(new CustomError('Error Getting The Categories Data', 400));
   }
