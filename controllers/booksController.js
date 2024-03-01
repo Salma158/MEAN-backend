@@ -13,18 +13,15 @@ const Categories = require('../models/categories');
 
 //------------ adding new book ---------------
 const addBook = async (req, res, next) => {
-  const { authorName, categoryName, name, description } = req.body
-  const [error, author] = await asyncWrapper(Authors.find({ firstName: authorName }).select('_id'))
-  if (error) {
-    return next(new CustomError("author not found", 404));
-  }
-  const [cerror, category] = await asyncWrapper(Categories.find({ categoryName: categoryName }).select('_id'))
+  const { author, category, name, description } = req.body
+
   if (cerror) {
     return next(new CustomError("author not found", 404));
   }
   if (!req.file) {
     return next(new CustomError('You must add a photo', 400));
   }
+
   const newBook = new Book({
     author,
     category,
