@@ -14,10 +14,6 @@ const Categories = require('../models/categories');
 //------------ adding new book ---------------
 const addBook = async (req, res, next) => {
   const { author, category, name, description } = req.body
-
-  if (cerror) {
-    return next(new CustomError("author not found", 404));
-  }
   if (!req.file) {
     return next(new CustomError('You must add a photo', 400));
   }
