@@ -76,12 +76,11 @@ const getBooks = async (req, res, next) => {
   const limit = req.query.limit * 1 || 20;
   const skip = (page - 1) * limit;
 
-  if (req.query.page) {
-    const booksCount = await Book.countDocuments();
-    if (skip >= booksCount)
-      return next(new CustomError("No more books to view!", 404));
+  const BooksCount = await Book.countDocuments();
+
+  if (req.query.page && skip >= BooksCount) {
+    return next(new CustomError("No more books to view!", 404));
   }
-  
 
   const [err, books] = await asyncWrapper(Book.find()
   .skip(skip).limit(limit)
@@ -104,6 +103,7 @@ const getBooks = async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: {
+      total: BooksCount,
       books,
     },
   });
