@@ -23,7 +23,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(staticFile));
+app.use('/images', express.static('images'));
 app.use(express.json());
 const PORT = process.env.PORT;
 const DB = process.env.DATABASE;
