@@ -18,14 +18,14 @@ const addBook = async (req, res, next) => {
     return next(new CustomError('You must add a photo', 400));
   }
 
-  const newBook = new Book({
+  const newBook = {
     author,
     category,
     name,
     image: req.file.filename,
     description
-  });
-  const [err, book] = await asyncWrapper(newBook.save());
+  };
+  const [err, book] = await asyncWrapper(newBook.create(newBook));
 
   if (err) {
     if (err.name === "ValidationError") {
