@@ -13,7 +13,7 @@ const getAllAuthors = async (req, res, next) => {
   const pageNumber = parseInt(req.query.pageNumber, 10) || 0;
   const limitSize = parseInt(req.query.limitSize, 10) || 4;
   const skip = pageNumber * limitSize;
-  const [err, authors] = await asyncWrapper(Authors.find({}).select('firstName lastName -_id')
+  const [err, authors] = await asyncWrapper(Authors.find({}))
     .skip(skip)
     .limit(limitSize)
     .exec());
