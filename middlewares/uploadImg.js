@@ -27,7 +27,7 @@ const checkType = (file, cb) => {
 
 const profileStorage = configureStorage('images/profile/');
 const bookStorage = configureStorage('images/books/');
-const authorStorage = configureStorage('images/books/');
+const authorStorage = configureStorage('images/authors/');
 
 const profileUpload = multer({
     storage: profileStorage,

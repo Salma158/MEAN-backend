@@ -4,19 +4,23 @@ const CustomError = require('../lib/customError');
 const jsonWebToken = require('jsonwebtoken');
 const fs = require('fs')
 const addOne = async (req, res, next) => {
-    const newUser = req.body;
-    if (!req.file || !req.file.filename) {
-        return next(new CustomError('you must add photo', 400));
+    const { userName, firstName, lastName, email, password, role } = req.body;
+
+
+    if (!req.file) {
+        return next(new CustomError('You must add a photo', 400));
     }
-    const [err, user] = await asyncWrapper(User.create({
-        userName: newUser.userName,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newUser.email,
-        password: newUser.password,
-        photo: req.file.filename,
-        role: newUser.role
-    }));
+
+    const newUser = {
+        userName,
+        firstName,
+        lastName,
+        email,
+        password,
+        role,
+        photo: req.file.filename
+    };
+    const [err, user] = await asyncWrapper(User.create(newUser));
     if (err) {
         fs.unlinkSync(req.file.path);
         return next(new CustomError(err.message, 400));
@@ -70,11 +74,7 @@ const updateRole = async (req, res, next) => {
     }
     return res.json(user);
 }
-logOut = (req, res) => {
-    req.session = null;
-    return res.status(200).send({ message: "You've been signed out!" });
 
-}
 
 module.exports = {
     addOne,
@@ -82,5 +82,5 @@ module.exports = {
     findOne,
     getAll,
     updateRole,
-    logOut
+
 };

@@ -5,13 +5,15 @@ const Book = require('../models/BooksModel');
 const CustomError = require('../lib/customError');
 const validateString = require('../lib/validateString');
 const booksController = require('./booksController')
+const UserBook = require('../models/UserBooksModel');
+
 
 // get authors using pagination
 const getAllAuthors = async (req, res, next) => {
   const pageNumber = parseInt(req.query.pageNumber, 10) || 0;
   const limitSize = parseInt(req.query.limitSize, 10) || 4;
   const skip = pageNumber * limitSize;
-  const [err, authors] = await asyncWrapper(Authors.find({}).select('firstName lastName -_id')
+  const [err, authors] = await asyncWrapper(Authors.find({})
     .skip(skip)
     .limit(limitSize)
     .exec());
@@ -26,16 +28,18 @@ const getAllAuthors = async (req, res, next) => {
 
 
 const createAuthor = async (req, res, next) => {
-
-  const authorData = req.body;
-  const photoFullPath = (`${req.protocol}://${req.get('host')}/images/authors/${req.file.filename}`);
-  const [err, newAuthor] = await asyncWrapper(Authors.create({
-    firstName: authorData.firstName,
-    lastName: authorData.lastName,
-    dob: authorData.dob,
-    photo: photoFullPath
+  const { firstName, lastName, dob } = req.body;
+  if (!req.file) {
+    return next(new CustomError('You must add a photo', 400));
   }
-  ));
+  const dateOfBirth = new Date(dob);
+  const newAuthor = {
+    firstName,
+    lastName,
+    dob: dateOfBirth,
+    photo: req.file.filename
+  };
+  const [err, author] = await asyncWrapper(Authors.create(newAuthor));
   if (!validateString(req.body.firstName)) {
     return next(new CustomError("No First Name Entered", 400));
   }
@@ -48,7 +52,7 @@ const createAuthor = async (req, res, next) => {
   if (err) {
     return next(new CustomError(err.message, 404));
   }
-  return res.status(201).json({ message: 'success', data: newAuthor });
+  return res.status(201).json({ message: 'success', data: author });
 };
 
 const deleteAuthor = async (req, res, next) => {
@@ -84,30 +88,52 @@ const updateAuthor = async (req, res, next) => {
 };
 
 const getAuthorDetails = async (req, res, next) => {
-  const authorId = req.params.id;
-  const [foundError, authorDetails] = await asyncWrapper(Authors.findById(authorId, 'firstName lastName dob'));
-  if (foundError) {
-    return next(new CustomError("Error Finding The Author", 500));
-  }
-  // If ID characters is changed
-  if (!authorDetails) {
-    return next(new CustomError("Author Not Found!", 404));
-  }
-  const [bookFound, books] = await asyncWrapper(Book.find({ author: authorId }, 'name status'));
-  if (bookFound) {
-    return next(new CustomError("Error Finding The Books", 500));
-  }
-  for (let i = 0; i < books.length; i++) {
-    try {
-      const ratingDetails = await booksController.calculateAvgRating(books[i]._id);
-      books[i] = { ...books[i].toObject(), ...ratingDetails };
-    } catch (err) {
-      return next(new CustomError("Error getting book ratings", 500));
+  try {
+    const authorId = req.params.id;
+    const [foundError, authorDetails] = await asyncWrapper(Authors.findById(authorId, 'firstName lastName dob'));
+    if (foundError) {
+      throw new CustomError("Error Finding The Author", 500);
     }
+    if (!authorDetails) {
+      throw new CustomError("Author Not Found!", 404);
+    }
+
+    const books = await Book.find({ author: authorId }, 'name');
+    const userBooks = await UserBook.find({ book: { $in: books.map(book => book._id) } });
+
+    const bookStatusMap = new Map();
+    userBooks.forEach(userBook => {
+      bookStatusMap.set(userBook.book.toString(), userBook.status);
+    });
+
+    const booksWithStatus = [];
+    for (let i = 0; i < books.length; i++) {
+      const book = books[i];
+      const status = bookStatusMap.get(book._id.toString()) || 'wish to read';
+
+      let ratingDetails;
+      try {
+        ratingDetails = await booksController.calculateAvgRating(book._id);
+      } catch (err) {
+        return next(new CustomError("Error getting book ratings", 500));
+      }
+
+      const bookWithDetails = {
+        _id: book._id,
+        name: book.name,
+        status: status,
+        ratingDetails: ratingDetails
+      };
+
+      booksWithStatus.push(bookWithDetails);
+    }
+
+    return res.status(200).json({ author: authorDetails, books: booksWithStatus });
+  } catch (error) {
+    return next(error);
   }
-  // check displaying the status and add the avg reviews and total
-  return res.status(200).json({ author: authorDetails, books: books });
 };
+
 
 const getPopularAuthors = async (req, res, next) => {
   const [err, popularAuthors] = await asyncWrapper(Book.aggregate([

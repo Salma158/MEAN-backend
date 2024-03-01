@@ -7,7 +7,7 @@ const CustomError = require('../lib/customError');
 const validateString = require('../lib/validateString');
 
 const getAllCategories = async (req, res, next) => {
-  const [err, categories] = await asyncWrapper(Categories.find({}).select('categoryName -_id'));
+  const [err, categories] = await asyncWrapper(Categories.find({}));
   if (err) {
     return next(new CustomError('Error Getting The Categories Data', 400));
   }
@@ -15,13 +15,13 @@ const getAllCategories = async (req, res, next) => {
 };
 
 const createCategory = async (req, res, next) => {
-  const category = req.body;
-  if (!new validateString(category.categoryName)) {
-    return res.status(400).json({ message: 'Invalid Category Name' });
-  }
-  const [err, newCategory] = await asyncWrapper(Categories.create(category));
+  const categoryName = req.body;
+  // if (!new validateString(categoryName)) {
+  //   return res.status(400).json({ message: 'Invalid Category Name' });
+  // }
+  const [err, newCategory] = await asyncWrapper(Categories.create(categoryName));
   if (err) {
-    return next(new CustomError('Error Creating The Category', 400));
+    return next(new CustomError(err.message, 400));
   }
   return res.json(newCategory);
 };
@@ -31,7 +31,7 @@ const deleteCategory = async (req, res, next) => {
   if (!categoryToDelete) {
     return res.status(404).json({ message: 'Category ID Not Found' });
   }
-  if (!err) {
+  if (err) {
     return next(new CustomError('Error Deleting The Category', 400));
   }
   res.status(200).json(categoryToDelete);

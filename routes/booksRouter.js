@@ -7,7 +7,7 @@ booksRouter.route('/')
     .post(
          auth.authorization, auth.restrictTo('admin'),
          multerMiddleWare.profileUpload.single("image"),
-        booksController.addBook)
+         booksController.addBook)
     .get(booksController.getBooks)
 
 booksRouter.route('/popularBooks')
