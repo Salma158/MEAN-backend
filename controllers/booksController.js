@@ -22,6 +22,9 @@ const addBook = async (req, res, next) => {
   if (cerror) {
     return next(new CustomError("author not found", 404));
   }
+  if (!req.file) {
+    return next(new CustomError('You must add a photo', 400));
+  }
   const newBook = new Book({
     author,
     category,
