@@ -32,10 +32,11 @@ const createAuthor = async (req, res, next) => {
   if (!req.file) {
     return next(new CustomError('You must add a photo', 400));
   }
+  const dateOfBirth = new Date(dob);
   const newAuthor = {
     firstName,
     lastName,
-    dob,
+    dob: dateOfBirth,
     photo: req.file.filename
   };
   const [err, author] = await asyncWrapper(Authors.create(newAuthor));
