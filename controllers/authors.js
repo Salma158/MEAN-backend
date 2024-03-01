@@ -33,7 +33,6 @@ const createAuthor = async (req, res, next) => {
     return next(new CustomError('You must add a photo', 400));
   }
   const newAuthor = {
-
     firstName,
     lastName,
     dob,
@@ -52,7 +51,7 @@ const createAuthor = async (req, res, next) => {
   if (err) {
     return next(new CustomError(err.message, 404));
   }
-  return res.status(201).json({ message: 'success', data: newAuthor });
+  return res.status(201).json({ message: 'success', data: author });
 };
 
 const deleteAuthor = async (req, res, next) => {
