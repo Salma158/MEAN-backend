@@ -22,15 +22,14 @@ const addBook = async (req, res, next) => {
   if (cerror) {
     return next(new CustomError("author not found", 404));
   }
-  const newBook = {
+  const newBook = new Book({
     author,
     category,
     name,
     image: req.file.filename,
     description
-  }
-
-  const [err, book] = await asyncWrapper(Book.create(newBook));
+  });
+  const [err, book] = await asyncWrapper(newBook.save());
 
   if (err) {
     if (err.name === "ValidationError") {
