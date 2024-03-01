@@ -14,6 +14,8 @@ var corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+app.use(routes);
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
   res.header(
@@ -37,7 +39,7 @@ mongoose
     console.log(err);
   });
 
-app.use(routes);
+
 
 
 

@@ -29,7 +29,6 @@ const addBook = async (req, res, next) => {
 
   if (err) {
     if (err.name === "ValidationError") {
-      console.log("hii")
       return handleValidationError(err, next);
     }
     return next(new CustomError("Error adding the book!", 500));
@@ -94,28 +93,23 @@ const getBooks = async (req, res, next) => {
 
 
   for (let i = 0; i < books.length; i++) {
-    try {
       const Rating = await calculateAvgRating(books[i]._id);
       books[i] = { ...books[i].toObject(), ...Rating };
-    } catch (error) {
-      return next(error);
     }
-  }
 
   console.log(books)
-  if (err) {
-    return next(new CustomError("Error getting the books!", 500));
-  }
 
   for (let i = 0; i < books.length; i++) {
     try {
       const Rating = await calculateAvgRating(books[i]._id);
       books[i] = { ...books[i].toObject(), ...Rating };
     } catch (err) {
-      return next(new CustomError("Error getting the books!", 500));
     }
   }
 
+  if (err) {
+    return next(new CustomError("Error getting the books!", 500));
+  }
 
   res.status(200).json({
     status: "success",
