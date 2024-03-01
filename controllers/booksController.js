@@ -8,15 +8,25 @@ const asyncWrapper = require("../lib/asyncWrapper");
 const CustomError = require("../lib/customError");
 const handleValidationError = require("./../lib/customValidator");
 const { text } = require("express");
+const Authors = require('../models/authors');
+const Categories = require('../models/categories');
 
 //------------ adding new book ---------------
 const addBook = async (req, res, next) => {
-  const { author, category, name, description } = req.body
+  const { authorName, categoryName, name, description } = req.body
+  const [error, author] = asyncWrapper(Authors.find({ firstName: authorName })).select('_id')
+  if (error) {
+    return next(new CustomError("author not found", 404));
+  }
+  const [cerror, category] = asyncWrapper(Categories.find({ categoryName: categoryName })).select('_id')
+  if (cerror) {
+    return next(new CustomError("author not found", 404));
+  }
   const newBook = new Book({
     author,
     category,
     name,
-    //image: req.file.filename,
+    image: req.file.filename,
     description
   });
   const [err, book] = await asyncWrapper(newBook.save());
