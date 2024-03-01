@@ -31,7 +31,7 @@ const deleteCategory = async (req, res, next) => {
   if (!categoryToDelete) {
     return res.status(404).json({ message: 'Category ID Not Found' });
   }
-  if (!err) {
+  if (err) {
     return next(new CustomError('Error Deleting The Category', 400));
   }
   res.status(200).json(categoryToDelete);
