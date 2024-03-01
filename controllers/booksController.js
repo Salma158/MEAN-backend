@@ -8,14 +8,14 @@ const asyncWrapper = require("../lib/asyncWrapper");
 const CustomError = require("../lib/customError");
 const handleValidationError = require("./../lib/customValidator");
 const { text } = require("express");
-const Authors = require('../models/authors');
-const Categories = require('../models/categories');
+const Authors = require("../models/authors");
+const Categories = require("../models/categories");
 
 //------------ adding new book ---------------
 const addBook = async (req, res, next) => {
-  const { author, category, name, description } = req.body
+  const { author, category, name, description } = req.body;
   if (!req.file) {
-    return next(new CustomError('You must add a photo', 400));
+    return next(new CustomError("You must add a photo", 400));
   }
 
   const newBook = {
@@ -23,7 +23,7 @@ const addBook = async (req, res, next) => {
     category,
     name,
     image: req.file.filename,
-    description
+    description,
   };
   const [err, book] = await asyncWrapper(Book.create(newBook));
 
@@ -51,11 +51,9 @@ const editBook = async (req, res) => {
     })
   );
 
-
   if (err) {
     return next(new CustomError("Error updating the book!", 500));
   }
-
 
   res.status(200).json({
     status: "success",
@@ -87,29 +85,21 @@ const getBooks = async (req, res, next) => {
     return next(new CustomError("No more books to view!", 404));
   }
 
-  const [err, books] = await asyncWrapper(Book.find()
-    .populate({ path: "author", select: "firstName lastName" })
-    .skip(skip).limit(limit));
+  const [err, books] = await asyncWrapper(
+    Book.find()
+      .populate({ path: "author", select: "firstName lastName" })
+      .skip(skip)
+      .limit(limit)
+  );
 
-
-    for (let i = 0; i < books.length; i++) {
-      const Rating = await calculateAvgRating(books[i]._id);
-      books[i] = { ...books[i].toObject(), ...Rating };
-    }
+  for (let i = 0; i < books.length; i++) {
+    const Rating = await calculateAvgRating(books[i]._id);
+    books[i] = { ...books[i].toObject(), ...Rating };
+  }
 
   if (err) {
     return next(new CustomError("Error getting the books!", 500));
   }
-
-  for (let i = 0; i < books.length; i++) {
-    try {
-      const Rating = await calculateAvgRating(books[i]._id);
-      books[i] = { ...books[i].toObject(), ...Rating };
-    } catch (err) {
-      return next(new CustomError("Error getting the books!", 500));
-    }
-  }
-
 
   res.status(200).json({
     status: "success",
@@ -136,9 +126,8 @@ const calculateAvgRating = async function (bookId) {
   const totalRatings = ratings.reduce((acc, curr) => acc + curr.rating, 0);
 
   const avgRating = totalRatings / ratings.length;
-  console.log(avgRating)
 
-  return { totalRatings, avgRating }
+  return { totalRatings, avgRating };
 };
 
 // --------------- get book by id -----------------
@@ -151,12 +140,9 @@ const getBookById = async (req, res, next) => {
       .populate({ path: "category", select: "categoryName" })
       .exec()
   );
-  try {
-    const avgRating = await calculateAvgRating(book._id);
-    book = { ...book.toObject(), avgRating };
-  } catch (err) {
-    return next(new CustomError("Error getting the book!", 500));
-  }
+
+  const avgRating = await calculateAvgRating(book._id);
+  book = { ...book.toObject(), avgRating };
 
   if (err) {
     return next(new CustomError("Error getting the book!", 500));
@@ -199,19 +185,18 @@ const getPopularBooks = async (req, res, next) => {
   }
   const bookIds = popularBooks.map((item) => item._id);
   const popularBooksDetails = await Book.find({ _id: { $in: bookIds } })
-    .populate({ path: 'author', select: 'firstName lastName' })
-    .populate({ path: 'category', select: 'categoryName' })
-    .exec()
+    .populate({ path: "author", select: "firstName lastName" })
+    .populate({ path: "category", select: "categoryName" })
+    .exec();
 
   for (let i = 0; i < popularBooksDetails.length; i++) {
-    try {
+  
       const avgRating = await calculateAvgRating(popularBooksDetails[i]._id);
-      popularBooksDetails[i] = { ...popularBooksDetails[i].toObject(), avgRating };
-    } catch (error) {
-      return next(error);
-    }
+      popularBooksDetails[i] = {
+        ...popularBooksDetails[i].toObject(),
+        avgRating,
+      };
   }
-
 
   res.status(200).json({
     status: "success",
@@ -250,5 +235,5 @@ module.exports = {
   getBookById,
   searchBook,
   getPopularBooks,
-  calculateAvgRating
+  calculateAvgRating,
 };

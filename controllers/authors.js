@@ -111,12 +111,10 @@ const getAuthorDetails = async (req, res, next) => {
       const book = books[i];
       const status = bookStatusMap.get(book._id.toString()) || 'wish to read';
 
-      let ratingDetails;
-      try {
-        ratingDetails = await booksController.calculateAvgRating(book._id);
-      } catch (err) {
-        return next(new CustomError("Error getting book ratings", 500));
-      }
+      
+       const ratingDetails = await booksController.calculateAvgRating(book._id);
+
+     
 
       const bookWithDetails = {
         _id: book._id,
