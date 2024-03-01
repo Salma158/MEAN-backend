@@ -28,16 +28,18 @@ const getAllAuthors = async (req, res, next) => {
 
 
 const createAuthor = async (req, res, next) => {
-
-  const authorData = req.body;
-  const photoFullPath = (`${req.protocol}://${req.get('host')}/images/authors/${req.file.filename}`);
-  const [err, newAuthor] = await asyncWrapper(Authors.create({
-    firstName: authorData.firstName,
-    lastName: authorData.lastName,
-    dob: authorData.dob,
-    photo: photoFullPath
+  const { firstName, lastName, dob } = req.body;
+  if (!req.file) {
+    return next(new CustomError('You must add a photo', 400));
   }
-  ));
+  const newAuthor = {
+
+    firstName,
+    lastName,
+    dob,
+    photo: req.file.filename
+  };
+  const [err, author] = await asyncWrapper(Authors.create(newAuthor));
   if (!validateString(req.body.firstName)) {
     return next(new CustomError("No First Name Entered", 400));
   }
