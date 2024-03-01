@@ -29,7 +29,6 @@ const addBook = async (req, res, next) => {
 
   if (err) {
     if (err.name === "ValidationError") {
-      console.log("hii")
       return handleValidationError(err, next);
     }
     return next(new CustomError("Error adding the book!", 500));
@@ -93,16 +92,11 @@ const getBooks = async (req, res, next) => {
     .skip(skip).limit(limit));
 
 
-  for (let i = 0; i < books.length; i++) {
-    try {
+    for (let i = 0; i < books.length; i++) {
       const Rating = await calculateAvgRating(books[i]._id);
       books[i] = { ...books[i].toObject(), ...Rating };
-    } catch (error) {
-      return next(error);
     }
-  }
 
-  console.log(books)
   if (err) {
     return next(new CustomError("Error getting the books!", 500));
   }
