@@ -1,7 +1,7 @@
 const path = require("path");
 const parentDir = path.resolve(__dirname, "..");
 const booksModelPath = path.join(parentDir, "models", "BooksModel");
-const Book = require('../models/BooksModel');
+const Book = require(booksModelPath);
 const userbooksModelPath = path.join(parentDir, "models", "UserBooksModel");
 const UserBook = require(userbooksModelPath);
 const asyncWrapper = require("../lib/asyncWrapper");
@@ -25,7 +25,7 @@ const addBook = async (req, res, next) => {
     image: req.file.filename,
     description
   };
-  const [err, book] = await asyncWrapper(newBook.create(newBook));
+  const [err, book] = await asyncWrapper(Book.create(newBook));
 
   if (err) {
     if (err.name === "ValidationError") {
