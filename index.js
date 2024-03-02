@@ -8,14 +8,14 @@ const staticFile = path.join(__dirname, 'images')
 dotenv.config();
 const app = express();
 var corsOptions = {
-  origin: "http://localhost:4200",
+  origin: "https://final-b5630.web.app",
   optionsSuccessStatus: 200
 
 };
 
 app.use(cors(corsOptions));
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+  res.setHeader("Access-Control-Allow-Origin", "https://final-b5630.web.app");
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"

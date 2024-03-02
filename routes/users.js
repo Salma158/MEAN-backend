@@ -9,6 +9,6 @@ router.post('/', multerMiddleWare.profileUpload.single("photo"), userController.
 router.post('/login', userController.logIn);
 router.get('/', auth.authorization, auth.restrictTo('admin'), userController.getAll);
 router.patch('/:id', auth.authorization, auth.restrictTo('admin'), userController.updateRole)
-router.get('/authors/:id', auth.authorization, authorsController.getAuthorDetails);
+router.get('/authors/:id', authorsController.getAuthorDetails);
 
 module.exports = router;

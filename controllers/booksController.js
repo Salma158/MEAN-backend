@@ -190,7 +190,6 @@ const getPopularBooks = async (req, res, next) => {
     .exec();
 
   for (let i = 0; i < popularBooksDetails.length; i++) {
-  
       const avgRating = await calculateAvgRating(popularBooksDetails[i]._id);
       popularBooksDetails[i] = {
         ...popularBooksDetails[i].toObject(),
